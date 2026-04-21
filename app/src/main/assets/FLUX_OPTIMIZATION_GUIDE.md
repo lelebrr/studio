@@ -1,6 +1,6 @@
 # FLUX.1 Optimization Guide: Elite Automotive Photography
 
-Este guia detalha como configurar o motor de IA do T-Line Studio para obter resultados fotográficos de nível catálogo usando o modelo FLUX.1.
+Este guia detalha como configurar o motor de IA do StudioCar para obter resultados fotográficos de nível catálogo usando o modelo FLUX.1.
 
 ---
 
@@ -14,7 +14,7 @@ O parâmetro mais crítico. Controla quanto a IA pode "alucinar" sobre a imagem 
 
 ### 2. Guidance Scale
 Controla a aderência ao prompt de texto.
-- **Ideal FLUX**: 3.5 — Evita o look "over-sharpened" ou "deep fried".
+- **Ideal FLUX**: 3.5 — Evita o look "over-sharpened" ou "deep-fried".
 - **Contraste Alto**: 4.5 — Útil para carros pretos brilhantes.
 
 ### 3. Steps (Passos de Inferência)
@@ -47,4 +47,4 @@ Carros pretos tendem a absorver ou refletir demais o ambiente sujo do pátio.
    - Enviar imagens acima de 3072px para a IA raramente melhora o resultado e aumenta drasticamente o custo e o tempo de processamento. O app faz o downscale automático para 2048px por padrão.
 
 ---
-**T-Line Studio Pro — V1.3 Elite Edition**
+**StudioCar Pro — V1.3 Elite Edition**

@@ -1,4 +1,4 @@
-# Release Notes - T-Line Studio Pro V1.0.0 (Gold Master)
+# Release Notes - StudioCar Pro V1.0.0 (Gold Master)
 
 Esta é a versão estável inicial para lançamento público na Google Play Store, focada em transformar a produtividade de concessionárias premium.
 
@@ -24,4 +24,4 @@ Esta é a versão estável inicial para lançamento público na Google Play Stor
 - **Privacy First**: Processamento efêmero sem armazenamento persistente de fotos originais em servidores externos.
 
 ---
-*T-Line Studio Pro - Elevando o padrão da fotografia automotiva mundial.*
+*StudioCar Pro - Elevando o padrão da fotografia automotiva mundial.*

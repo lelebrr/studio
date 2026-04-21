@@ -1,8 +1,8 @@
-# Proposta Comercial: T-Line Studio Pro
+# Proposta Comercial: StudioCar Pro
 
 Prezado Diretor/Gerente de Vendas,
 
-Transforme o pátio da sua loja em um estúdio fotográfico de luxo em segundos. Apresentamos o **T-Line Studio**, o primeiro app com inteligência artificial generativa focado 100% no setor automotivo.
+Transforme o pátio da sua loja em um estúdio fotográfico de luxo em segundos. Apresentamos o **StudioCar**, o primeiro app com inteligência artificial generativa focado 100% no setor automotivo.
 
 ---
 
@@ -34,4 +34,4 @@ Para grandes redes de concessionárias que desejam sua própria marca.
 - Ative o **Modo Demo** agora mesmo e veja o poder do recorte instantâneo.
 - Agende uma demonstração ao vivo em seu pátio.
 
-**T-Line Studio: Onde a foto de pátio vira anúncio de catálogo.**
+**StudioCar: Onde a foto de pátio vira anúncio de catálogo.**

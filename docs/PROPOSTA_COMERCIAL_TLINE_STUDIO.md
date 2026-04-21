@@ -30,11 +30,11 @@ O **T-Line Car Studio Pro** é uma solução de inteligência artificial de últ
 
 Escolha o modelo que melhor se adapta à sua operação:
 
-| Opção | Descrição | Investimento |
-| :--- | :--- | :--- |
-| **1. Licença Vitalícia (Recomendado)** | Uso ilimitado do software, sem taxas mensais para o desenvolvedor. Você paga apenas o consumo da API IA. | **R$ 8.900,00** (Taxa Única) |
-| **2. Plano por Vendedor** | Licença mensal por dispositivo/usuário ativo. Ideal para equipes menores. | **R$ 89,00/mês** (Por Usuário) |
-| **3. White Label & Corporativo** | App com sua marca própria no ícone e telas. Suporte prioritário e customização de showrooms exclusivos. | **R$ 14.900,00** + Mensalidade |
+| Opção                                 | Descrição                                                                                             | Investimento                  |
+| :------------------------------------ | :---------------------------------------------------------------------------------------------------- | :---------------------------- |
+| **1. Licença Vitalícia (Recomendado)** | Uso ilimitado do software, sem taxas mensais para o desenvolvedor. Você paga apenas o consumo da API IA. | **R$ 8.900,00** (Taxa Única)  |
+| **2. Plano por Vendedor**             | Licença mensal por dispositivo/usuário ativo. Ideal para equipes menores.                             | **R$ 89,00/mês** (Por Usuário) |
+| **3. White Label & Corporativo**      | App com sua marca própria no ícone e telas. Suporte prioritário e customização de showrooms exclusivos. | **R$ 14.900,00** + Mensalidade |
 
 ---
 

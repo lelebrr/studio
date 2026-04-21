@@ -1,3 +1,4 @@
+@file:Suppress("UnstableApiUsage")
 pluginManagement {
     repositories {
         google()
@@ -16,5 +17,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "T-Line Studio"
+rootProject.name = "StudioCar"
 include(":app")

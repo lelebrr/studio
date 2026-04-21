@@ -1,6 +1,6 @@
-# Play Store Publication Checklist – T-Line Studio Pro (V1.3)
+# Play Store Publication Checklist – StudioCar Pro (V1.3)
 
-Este guia fornece todos os passos e textos necessários para publicar o **T-Line Studio Pro** com sucesso.
+Este guia fornece todos os passos e textos necessários para publicar o **StudioCar Pro** com sucesso.
 
 ---
 
@@ -20,16 +20,16 @@ No Android Studio:
 ## 3. Metadados para a Loja (SEO)
 
 ### Título do App
-- **Português**: T-Line Studio — Estúdio de Carros IA
+- **Português**: StudioCar — Estúdio de Carros IA
 
 ### Descrição Curta (80 caracteres)
 - **Texto**: Transforme o pátio da sua loja em um estúdio fotográfico 4K com IA.
 
 ### Descrição Completa
 - **Texto**: 
-O **T-Line Studio** é a plataforma definitiva de fotografia automotiva para concessionárias que buscam o máximo em profissionalismo e agilidade nas vendas.
+O **StudioCar** é a plataforma definitiva de fotografia automotiva para concessionárias que buscam o máximo em profissionalismo e agilidade nas vendas.
 
-**Por que usar o T-Line Studio Pro?**
+**Por que usar o StudioCar Pro?**
 • **Motor FLUX.1 Elite**: Refinamento multi-pass para realismo fotográfico imbatível.
 • **IA Generativa de Ponta**: Substitua cenários reais por showrooms de luxo instantaneamente com transparência X-Ray em vidros.
 • **Recorte Perfeito**: Tecnologia MediaPipe para remoção de fundo com precisão milimétrica.
@@ -55,7 +55,7 @@ Elimine gastos com estúdios físicos e fotógrafos terceirizados. Transforme se
 
 ## 5. Política de Privacidade (Simplified Text)
 - **URL**: [https://tline.studio/privacy](https://tline.studio/privacy) (Exemplo)
-- **Conteúdo**: "O T-Line Studio solicita permissão de CÂMERA para captura e ARMAZENAMENTO para salvar as fotos editadas na sua galeria. Não coletamos nem vendemos dados pessoais ou localização. As fotos são processadas de forma efêmera via IA e retornadas ao seu dispositivo."
+- **Conteúdo**: "O StudioCar solicita permissão de CÂMERA para captura e ARMAZENAMENTO para salvar as fotos editadas na sua galeria. Não coletamos nem vendemos dados pessoais ou localização. As fotos são processadas de forma efêmera via IA e retornadas ao seu dispositivo."
 
 ---
 

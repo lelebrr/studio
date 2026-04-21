@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">T-Line Car Studio Pro</string>
+    <string name="app_name">StudioCar</string>
     
     <!-- Onboarding / Welcome Screens -->
     <string name="onboarding_title_1">Fotografia de Elite</string>
@@ -18,17 +18,11 @@
     <string name="onboarding_button_start">COMEÇAR AGORA</string>
 
     <!-- Splash Screen -->
-    <string name="splash_slogan">Estúdio Fotográfico Profissional para Carros</string>
-
+    
     <!-- Commercial Flow -->
-    <string name="btn_share_whatsapp">ENVIAR POR WHATSAPP</string>
-    <string name="share_title">Compartilhar Oferta</string>
 
     <!-- Editor -->
-    <string name="editor_save_success">Imagem salva em 4K na Pasta Vendas!</string>
-    <string name="editor_save_error">Falha ao salvar. Verifique permissões.</string>
-    
+
     <!-- Info -->
     <string name="app_description_short">O estúdio fotográfico de carros definitivo para sua concessionária.</string>
-    <string name="app_description_long">T-Line Studio: Transforme seu pátio em um estúdio 4K. \n\nRecursos: \n- Remoção de fundo automática. \n- Showrooms virtuais realistas. \n- Geração de legendas IA para vendas. \n- Integração direta com WhatsApp.</string>
 </resources>

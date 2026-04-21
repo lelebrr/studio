@@ -1,4 +1,4 @@
-# Modelos MediaPipe - T-Line Studio
+# Modelos MediaPipe - StudioCar
 
 Para que o segmentador funcione corretamente, você deve baixar os seguintes modelos `.tflite` e colocá-los nesta pasta (`src/main/assets/`).
 
@@ -20,4 +20,4 @@ Otimizado para segmentação de pessoas em tempo real.
 3. Mova o arquivo para a pasta `app/src/main/assets/`.
 
 ---
-*Configurado para T-Line Studio - 2026*
+*Configurado para StudioCar - 2026*

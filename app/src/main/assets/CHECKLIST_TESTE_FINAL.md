@@ -1,4 +1,4 @@
-# Checklist de Teste Final: T-Line Studio Pro
+# Checklist de Teste Final: StudioCar Pro
 
 Execute estes 8 testes antes de entregar o aparelho ou o APK para a concessionária.
 

@@ -1,4 +1,4 @@
-# Guia de Instalação e Configuração: T-Line Studio Pro
+# Guia de Instalação e Configuração: StudioCar Pro
 
 Este guia é destinado ao proprietário ou gerente de TI da concessionária. Siga estes passos para configurar o sistema nos dispositivos da sua equipe.
 
@@ -11,7 +11,7 @@ Este guia é destinado ao proprietário ou gerente de TI da concessionária. Sig
 4. Abra o app e conceda as permissões de **Câmera** e **Galeria**.
 
 ## 2. Configuração da Inteligência IA (API Key)
-O T-Line Studio utiliza supercomputadores na nuvem para processar as imagens. Para isso, você precisa de uma chave de conexão (API Key):
+O StudioCar utiliza supercomputadores na nuvem para processar as imagens. Para isso, você precisa de uma chave de conexão (API Key):
 1. Acesse o menu lateral e vá em **Configurações**.
 2. No campo **OpenRouter API Key**, cole a chave fornecida pela T-Line ou gere a sua em `openrouter.ai`.
 3. Clique em **Salvar**.

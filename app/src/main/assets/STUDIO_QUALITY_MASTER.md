@@ -1,6 +1,6 @@
 # 🏆 Guia Mestre: Qualidade de Estúdio Automotivo
 
-Este guia técnico destina-se a fotógrafos e vendedores que buscam a **perfeição comercial** usando o **T-Line Studio Pro (V1.5)**.
+Este guia técnico destina-se a fotógrafos e vendedores que buscam a **perfeição comercial** usando o **StudioCar Pro (V1.5)**.
 
 ---
 
@@ -30,7 +30,7 @@ Acesse o **Modo Estúdio (Avançado)** nas configurações para ajustar o motor:
 ---
 
 ## 🧪 3. Entendendo o Processo
-O T-Line Studio agora trabalha em camadas:
+O StudioCar agora trabalha em camadas:
 1. **Estrutura (Gemini)**: Define onde o carro está e como os vidros devem se comportar.
 2. **Refinamento (FLUX)**: "Pinta" a cena com texturas 4K e realismo fotográfico.
 3. **Polimento (Local)**: Adiciona o brilho final e foco seletivo.
@@ -43,4 +43,4 @@ O T-Line Studio agora trabalha em camadas:
 - **Showroom Lotado**: O MediaPipe fará o recorte inicial, mas o **Modo Ultra Híbrido** é essencial para limpar o cenário através dos vidros.
 
 ---
-**T-Line Studio Pro** - Elevando o estoque da sua concessionária ao nível global.
+**StudioCar Pro** - Elevando o estoque da sua concessionária ao nível global.

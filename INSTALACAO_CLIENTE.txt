@@ -1,0 +1,48 @@
+================================================================================
+          MANUAL DE INSTALAÇÃO E CONFIGURAÇÃO - STUDIOCAR PRO (V1.0.0)
+================================================================================
+
+Este documento descreve os passos para instalar e configurar o StudioCar no seu 
+dispositivo Android para uso em concessionárias e estúdios automotivos.
+
+---
+1. REQUISITOS DO SISTEMA
+---
+- Dispositivo Android com versão 12 (api 31) ou superior.
+- Conexão de Internet estável (Wi-Fi recomendado).
+- Acesso à API do OpenRouter (chave necessária para processamento IA Premium).
+
+---
+2. INSTALAÇÃO (PRODUÇÃO)
+---
+1. Baixe o arquivo APK gerado (app-release.apk).
+2. Habilite "Instalação de Fontes Desconhecidas" nas configurações do Android.
+3. Execute o APK e siga as instruções na tela.
+
+---
+3. CONFIGURAÇÃO IA ELITE (IMPORTANTE)
+---
+Para utilizar o motor de processamento StudioCar (Gemini + FLUX), você deve:
+1. Abrir o aplicativo.
+2. Navegar até o ícone de 'Engrenagem' (Configurações).
+3. Inserir sua 'OpenRouter API Key'.
+4. Ativar o 'Modo Ultra (Elite)' para obter máxima fidelidade 4K.
+
+---
+4. DICAS PARA MELHORES RESULTADOS
+---
+- ILUMINAÇÃO: Use o Modo HDR automático do aplicativo em locais com sombras fortes.
+- ENQUADRAMENTO: Posicione o veículo dentro das guias de silhueta no visor.
+- ESTÚDIO: Fotos capturadas com o dispositivo próximo ao nível do solo (ângulo de showroom) 
+  geram resultados mais impressionantes com o FLUX Pro.
+
+---
+5. SUPORTE TÉCNICO
+---
+Em caso de falhas no processamento ou rebarbas nas imagens:
+- Limpe o cache do aplicativo em Configurações > Aplicativos.
+- Verifique se a cota de tokens na OpenRouter está ativa.
+
+================================================================================
+                   StudioCar - Revolucionando o Venda Automotiva
+================================================================================

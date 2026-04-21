@@ -1,4 +1,4 @@
-# Guia de Operação: T-Line Studio Pro
+# Guia de Operação: StudioCar Pro
 
 Bem-vindo ao futuro da fotografia automotiva. Este documento contém os passos essenciais para que sua equipe extraia o máximo da tecnologia T-Line.
 
@@ -36,4 +36,4 @@ Bem-vindo ao futuro da fotografia automotiva. Este documento contém os passos e
 - **Processamento**: O tempo de edição pode variar (5-15s) dependendo da conexão com a internet, pois utilizamos supercomputadores de IA na nuvem.
 
 ---
-**T-Line Studio Pro – Onde cada carro vira um destaque.**
+**StudioCar Pro – Onde cada carro vira um destaque.**
