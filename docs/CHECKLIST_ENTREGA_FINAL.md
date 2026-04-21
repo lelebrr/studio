@@ -1,4 +1,4 @@
-# ✅ Checklist de Entrega Final: T-Line Car Studio Pro
+# ✅ Checklist de Entrega Final: StudioCar Elite
 
 Este checklist deve ser completado antes da reunião de entrega formal ao cliente para garantir uma experiência perfeita (Gold Master).
 
@@ -18,7 +18,12 @@ Este checklist deve ser completado antes da reunião de entrega formal ao client
 - [ ] **Dispositivos**: Instalar o APK em pelo menos 2 celulares da equipe do cliente (vendedores).
 - [ ] **Treinamento**: Reservar 15 minutos para mostrar o fluxo para o gerente e um vendedor "campeão".
 
-## 🤝 Fase 4: Entrega e Aprovação
+## ✨ Fase 4: Verificação de Estética e Precisão
+- [ ] **Qualidade de Segmentação**: Garantir que o recorte do veículo está cirúrgico (sem halos).
+- [ ] **Integração de Estúdio**: Validar se a iluminação automática combina com o cenário escolhido.
+- [ ] **Conclusão do Processamento**: Verificar se a notificação de sucesso aparece após cada edição.
+
+## 🤝 Fase 5: Entrega e Aprovação
 - [ ] Enviar a mensagem de introdução via WhatsApp/E-mail.
 - [ ] Apresentar a Proposta Comercial e os termos de garantia.
 - [ ] Coletar o feedback inicial e agendar o primeiro suporte de acompanhamento.

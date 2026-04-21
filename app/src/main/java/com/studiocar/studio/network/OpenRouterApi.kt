@@ -13,7 +13,7 @@ interface OpenRouterApi {
     @POST("chat/completions")
     suspend fun getCompletion(
         @Header("Authorization") auth: String,
-        @Header("HTTP-Referer") referer: String = "https://tlinestudio.com",
+        @Header("HTTP-Referer") referer: String = "https://studiocar.ai",
         @Header("X-Title") title: String = "StudioCar Pro",
         @Body request: ChatRequest
     ): ChatResponse

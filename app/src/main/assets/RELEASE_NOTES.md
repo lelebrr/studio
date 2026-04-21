@@ -1,4 +1,4 @@
-# Release Notes - StudioCar Pro V1.0.0 (Gold Master)
+# Release Notes - StudioCar Elite V2.1.0 (Gold Master)
 
 Esta é a versão estável inicial para lançamento público na Google Play Store, focada em transformar a produtividade de concessionárias premium.
 
@@ -12,7 +12,7 @@ Esta é a versão estável inicial para lançamento público na Google Play Stor
 ### 🏢 Modo Concessionária (Professional)
 - **Fluxo "One-Tap"**: Preset otimizado de Showroom Branco e Chão Polido para uniformidade no estoque.
 - **Captura 4K + HDR**: Suporte nativo para os sensores de câmera mais recentes do Android 15/16.
-- **Marca d'água Profissional**: Identificação automática de edições feitas com a tecnologia T-Line.
+- **Marca d'água Profissional**: Identificação automática de edições feitas com a tecnologia StudioCar.
 
 ### 💰 Ferramentas de Venda Inteligente
 - **Geração Automática de Legendas**: IA analisa o carro e gera textos comerciais impactantes prontos para redes sociais.
@@ -24,4 +24,4 @@ Esta é a versão estável inicial para lançamento público na Google Play Stor
 - **Privacy First**: Processamento efêmero sem armazenamento persistente de fotos originais em servidores externos.
 
 ---
-*StudioCar Pro - Elevando o padrão da fotografia automotiva mundial.*
+*StudioCar Elite - Elevando o padrão da fotografia automotiva mundial.*

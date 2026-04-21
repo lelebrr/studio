@@ -1,6 +1,6 @@
-# Guia de Operação: StudioCar Pro
+# Guia de Operação: StudioCar Elite
 
-Bem-vindo ao futuro da fotografia automotiva. Este documento contém os passos essenciais para que sua equipe extraia o máximo da tecnologia T-Line.
+Bem-vindo ao futuro da fotografia automotiva. Este documento contém os passos essenciais para que sua equipe extraia o máximo da tecnologia StudioCar.
 
 ---
 
@@ -36,4 +36,4 @@ Bem-vindo ao futuro da fotografia automotiva. Este documento contém os passos e
 - **Processamento**: O tempo de edição pode variar (5-15s) dependendo da conexão com a internet, pois utilizamos supercomputadores de IA na nuvem.
 
 ---
-**StudioCar Pro – Onde cada carro vira um destaque.**
+**StudioCar Elite – Onde cada carro vira um destaque.**

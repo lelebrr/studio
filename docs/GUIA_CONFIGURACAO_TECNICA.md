@@ -1,11 +1,11 @@
 # 🛠️ Guia de Configuração Técnica (Gerência / TI)
 
-Este documento contém os passos necessários para configurar e manter o sistema T-Line Car Studio Pro operacional na sua concessionária.
+Este documento contém os passos necessários para configurar e manter o sistema StudioCar Elite operacional na sua concessionária.
 
 ## 1. Instalação do Aplicativo
 
 O app é fornecido como um arquivo APK de instalação direta (Enterprise).
-1. Transfira o arquivo `T-Line-Studio-Pro-v1.7.apk` para o celular.
+1. Transfira o arquivo `StudioCar-Elite-v2.1.apk` para o celular.
 2. Ative "Instalar aplicativos de fontes desconhecidas" nas configurações do Android.
 3. Execute o APK e siga os passos de instalação.
 
@@ -15,7 +15,7 @@ O sistema utiliza a tecnologia OpenRouter para processar as imagens via IA de El
 1. Acesse [openrouter.ai](https://openrouter.ai/).
 2. Crie uma conta e adicione créditos (recomenda-se um valor inicial de $10 a $20).
 3. Gere uma **API KEY** (Chave de API).
-4. No aplicativo T-Line, vá em **Configurações** e cole a chave no campo indicado.
+4. No aplicativo StudioCar, vá em **Configurações** e cole a chave no campo indicado.
 5. Toque em **TESTAR CONEXÃO**. Se aparecer o ícone verde, o sistema está pronto.
 
 ## 3. Modo Concessionária (Produção)

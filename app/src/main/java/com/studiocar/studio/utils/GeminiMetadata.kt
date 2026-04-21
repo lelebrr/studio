@@ -25,7 +25,7 @@ object GeminiMetadataHelper {
             glassMask = glassMask,
             originalMetadata = mapOf(
                 "version" to "1.1",
-                "engine" to "MediaPipe+TLine",
+                "engine" to "MediaPipe+StudioCar",
                 "timestamp" to System.currentTimeMillis().toString()
             )
         )

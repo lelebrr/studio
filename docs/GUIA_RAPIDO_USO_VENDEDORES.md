@@ -1,4 +1,4 @@
-# 📸 Guia Rápido: T-Line Car Studio Pro (Vendedores)
+# 📸 Guia Rápido: StudioCar Elite (Vendedores)
 
 Bem-vindo ao futuro da fotografia automotiva! Este guia ajudará você a criar fotos dignas de estúdio em menos de 30 segundos, direto do pátio.
 
@@ -18,8 +18,8 @@ Bem-vindo ao futuro da fotografia automotiva! Este guia ajudará você a criar f
 ## ❓ O que fazer se...
 
 *   **A internet estiver lenta**: O processamento pode demorar alguns segundos extras. O app avisará se a conexão cair totalmente.
-*   **O app travar**: Feche o app e abra novamente. O T-Line é robusto e recupera rápido.
+*   **O app travar**: Feche o app e abra novamente. O StudioCar é robusto e recupera rápido.
 *   **A foto ficar estranha**: Tente tirar a foto de um ângulo diferente e repita o processo. A IA aprende com o contexto!
 
 ---
-**T-Line Car Studio Pro — Venda mais, venda com estilo.**
+**StudioCar Elite — Venda mais, venda com estilo.**

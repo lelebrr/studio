@@ -1,4 +1,4 @@
-# Guia de Instalação e Configuração: StudioCar Pro
+# Guia de Instalação e Configuração: StudioCar Elite
 
 Este guia é destinado ao proprietário ou gerente de TI da concessionária. Siga estes passos para configurar o sistema nos dispositivos da sua equipe.
 
@@ -13,7 +13,7 @@ Este guia é destinado ao proprietário ou gerente de TI da concessionária. Sig
 ## 2. Configuração da Inteligência IA (API Key)
 O StudioCar utiliza supercomputadores na nuvem para processar as imagens. Para isso, você precisa de uma chave de conexão (API Key):
 1. Acesse o menu lateral e vá em **Configurações**.
-2. No campo **OpenRouter API Key**, cole a chave fornecida pela T-Line ou gere a sua em `openrouter.ai`.
+2. No campo **OpenRouter API Key**, cole a chave fornecida pela StudioCar ou gere a sua em `openrouter.ai`.
 3. Clique em **Salvar**.
    > **Segurança**: A chave fica salva apenas no dispositivo do vendedor. Nós não temos acesso a ela.
 
@@ -26,4 +26,4 @@ O StudioCar utiliza supercomputadores na nuvem para processar as imagens. Para i
 - Periodicamente, utilize o botão **"Limpar Cache"** nas configurações para liberar espaço no dispositivo caso o volume de fotos seja muito alto.
 
 ---
-**Suporte Técnico**: contato@tline.studio | (XX) XXXX-XXXX
+**Suporte Técnico**: contato@studiocar.ai | (XX) XXXX-XXXX

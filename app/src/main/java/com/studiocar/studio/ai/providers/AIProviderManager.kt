@@ -27,15 +27,15 @@ class AIProviderManager(private val context: Context) {
     private fun registerProviders() {
         // Registro manual dos provedores principais
         val openRouter = OpenRouterProvider(context, securityUtils)
-        val gemini = GeminiProvider(context, securityUtils)
-        val claude = ClaudeProvider(context, securityUtils)
-        val openai = OpenAIProvider(context, securityUtils)
-        val stability = StabilityAIProvider(context, securityUtils)
-        val replicate = ReplicateProvider(context, securityUtils)
-        val together = TogetherAIProvider(context, securityUtils)
-        val fireworks = FireworksAIProvider(context, securityUtils)
-        val huggingface = HuggingFaceProvider(context, securityUtils)
-        val grok = GrokProvider(context, securityUtils)
+        val gemini = GeminiProvider(securityUtils)
+        val claude = ClaudeProvider(securityUtils)
+        val openai = OpenAIProvider(securityUtils)
+        val stability = StabilityAIProvider(securityUtils)
+        val replicate = ReplicateProvider(securityUtils)
+        val together = TogetherAIProvider(securityUtils)
+        val fireworks = FireworksAIProvider(securityUtils)
+        val huggingface = HuggingFaceProvider(securityUtils)
+        val grok = GrokProvider(securityUtils)
 
         providers[openRouter.id] = openRouter
         providers[gemini.id] = gemini
