@@ -140,10 +140,10 @@ class SAMSegmenter(private val context: Context) {
         // Máscara vazia inicial (placeholder)
         val emptyMask = FloatBuffer.allocate(1 * 1 * 256 * 256)
         decoderInputs["mask_input"] = OnnxTensor.createTensor(env, emptyMask, longArrayOf(1, 1, 256, 256))
-        decoderInputs["has_mask_input"] = OnnxTensor.createTensor(env, floatArrayOf(0f), longArrayOf(1))
+        decoderInputs["has_mask_input"] = OnnxTensor.createTensor(env, FloatBuffer.wrap(floatArrayOf(0f)), longArrayOf(1))
 
         val decoderOutput = decoderSession?.run(decoderInputs)
-        val masks = decoderOutput?.get("masks") as? OnnxTensor ?: return null
+        val masks = decoderOutput?.get("masks")?.get() as? OnnxTensor ?: return null
         
         return maskTensorToBitmap(masks)
     }

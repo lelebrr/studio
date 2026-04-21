@@ -8,7 +8,6 @@ import com.studiocar.studio.utils.SecurityUtils
 import timber.log.Timber
 
 class GeminiProvider(
-    private val context: Context,
     private val securityUtils: SecurityUtils
 ) : ImageAIProvider {
 
@@ -24,7 +23,7 @@ class GeminiProvider(
         prompt: String,
         options: EditOptions
     ): Bitmap? {
-        val apiKey = securityUtils.getApiKey(id) ?: return null
+        securityUtils.getApiKey(id) ?: return null
         // Implementação direta via Vertex AI / Generative AI API Google
         // Por simplicidade, usamos o endpoint de visão unificado via Retrofit
         return try {
@@ -38,7 +37,7 @@ class GeminiProvider(
         }
     }
 
-    override suspend fun generateCaption(prompt: String): String? {
+    override suspend fun generateCaption(prompt: String): String {
         return "Veículo premium processado pelo Google Gemini."
     }
 

@@ -85,7 +85,7 @@ object OpenRouterConfig {
     /**
      * REMOÇÃO DE OBJETOS (#9): Limpeza de Cena via Inpainting.
      */
-    fun getObjectRemovalPrompt(): String = "Remove all people, trash, street clutter, and unwanted reflections. Reconstruct background with seamless texture matching the car's environment."
+    const val OBJECT_REMOVAL_PROMPT = "Remove all people, trash, street clutter, and unwanted reflections. Reconstruct background with seamless texture matching the car's environment."
 
     /**
      * REFINAMENTO ULTRA PREMIUM (GEMINI 3.1): Máscara e Vidros.

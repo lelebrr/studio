@@ -8,7 +8,6 @@ import com.studiocar.studio.utils.SecurityUtils
 import timber.log.Timber
 
 class StabilityAIProvider(
-    private val context: Context,
     private val securityUtils: SecurityUtils
 ) : ImageAIProvider {
 
@@ -24,7 +23,7 @@ class StabilityAIProvider(
         prompt: String,
         options: EditOptions
     ): Bitmap? {
-        val apiKey = securityUtils.getApiKey(id) ?: return null
+        securityUtils.getApiKey(id) ?: return null
         return try {
             Timber.i("Stability AI: Gerando inpainting com SD3...")
             // Implementação via endpoint Stability.ai
@@ -35,7 +34,7 @@ class StabilityAIProvider(
         }
     }
 
-    override suspend fun generateCaption(prompt: String): String? {
+    override suspend fun generateCaption(prompt: String): String {
         return "Foto profissional editada via Stability AI."
     }
 

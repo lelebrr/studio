@@ -137,6 +137,18 @@ private fun CarAngleSilhouette(angle: PhotoAngle) {
                 lineTo(w * 0.12f, h * 0.72f)
                 close()
             }
+            PhotoAngle.REAR_THREE_QUARTER -> Path().apply {
+                moveTo(w * 0.15f, h * 0.70f)
+                lineTo(w * 0.20f, h * 0.60f)
+                lineTo(w * 0.30f, h * 0.55f)
+                lineTo(w * 0.50f, h * 0.45f)
+                lineTo(w * 0.70f, h * 0.45f)
+                lineTo(w * 0.85f, h * 0.55f)
+                lineTo(w * 0.90f, h * 0.60f)
+                lineTo(w * 0.90f, h * 0.70f)
+                lineTo(w * 0.15f, h * 0.70f)
+                close()
+            }
             PhotoAngle.LEFT_SIDE -> Path().apply {
                 moveTo(w * 0.05f, h * 0.65f)
                 lineTo(w * 0.10f, h * 0.58f)

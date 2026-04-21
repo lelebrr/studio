@@ -15,9 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -170,7 +168,7 @@ fun ProviderItem(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icone baseado no ID do provedor
+            // Ícone baseado no ID do provedor
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -186,7 +184,7 @@ fun ProviderItem(
                         "stability" -> Icons.Default.ColorLens
                         "replicate" -> Icons.Default.AccountTree
                         "together" -> Icons.Default.Hub
-                        "fireworks" -> Icons.Default.Firework
+                        "fireworks" -> Icons.Default.Flare
                         "huggingface" -> Icons.Default.EmojiEmotions
                         "grok" -> Icons.Default.Psychology
                         else -> Icons.Default.Cloud

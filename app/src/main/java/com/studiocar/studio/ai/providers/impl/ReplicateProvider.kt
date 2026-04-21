@@ -8,7 +8,6 @@ import com.studiocar.studio.utils.SecurityUtils
 import timber.log.Timber
 
 class ReplicateProvider(
-    private val context: Context,
     private val securityUtils: SecurityUtils
 ) : ImageAIProvider {
 
@@ -24,7 +23,7 @@ class ReplicateProvider(
         prompt: String,
         options: EditOptions
     ): Bitmap? {
-        val apiKey = securityUtils.getApiKey(id) ?: return null
+        securityUtils.getApiKey(id) ?: return null
         return try {
             Timber.i("Replicate: Processando imagem...")
             bitmap
@@ -34,7 +33,7 @@ class ReplicateProvider(
         }
     }
 
-    override suspend fun generateCaption(prompt: String): String? {
+    override suspend fun generateCaption(prompt: String): String {
         return "Processado via Replicate Engine."
     }
 

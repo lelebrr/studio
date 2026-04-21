@@ -111,43 +111,43 @@ object ImageAdjustmentApplier {
             DirectionalLightStyle.SOFT_FRONT -> {
                 RadialGradient(
                     width / 2f, height / 2f, width.toFloat(),
-                    intArrayOf(Color.WHITE.withAlpha(40), Color.TRANSPARENT),
+                    intArrayOf(Color.argb(40, 255, 255, 255), Color.TRANSPARENT),
                     null, Shader.TileMode.CLAMP
                 )
             }
             DirectionalLightStyle.SIDE_LEFT -> {
                 LinearGradient(
                     0f, 0f, width * 0.4f, 0f,
-                    intArrayOf(Color.WHITE.withAlpha(60), Color.TRANSPARENT),
+                    intArrayOf(Color.argb(60, 255, 255, 255), Color.TRANSPARENT),
                     null, Shader.TileMode.CLAMP
                 )
             }
             DirectionalLightStyle.SIDE_RIGHT -> {
                 LinearGradient(
                     width.toFloat(), 0f, width * 0.6f, 0f,
-                    intArrayOf(Color.WHITE.withAlpha(60), Color.TRANSPARENT),
+                    intArrayOf(Color.argb(60, 255, 255, 255), Color.TRANSPARENT),
                     null, Shader.TileMode.CLAMP
                 )
             }
             DirectionalLightStyle.DRAMATIC_45 -> {
                 LinearGradient(
                     0f, 0f, width * 0.7f, height * 0.7f,
-                    intArrayOf(Color.WHITE.withAlpha(80), Color.TRANSPARENT),
+                    intArrayOf(Color.argb(80, 255, 255, 255), Color.TRANSPARENT),
                     null, Shader.TileMode.CLAMP
                 )
             }
             DirectionalLightStyle.TOP_STUDIO -> {
                 LinearGradient(
                     0f, 0f, 0f, height * 0.3f,
-                    intArrayOf(Color.WHITE.withAlpha(100), Color.TRANSPARENT),
+                    intArrayOf(Color.argb(100, 255, 255, 255), Color.TRANSPARENT),
                     null, Shader.TileMode.CLAMP
                 )
             }
             DirectionalLightStyle.NATURAL_WINDOW -> {
                 // Simula luz de janela com faixas
                 val colors = intArrayOf(
-                    Color.WHITE.withAlpha(50), Color.TRANSPARENT,
-                    Color.WHITE.withAlpha(50), Color.TRANSPARENT
+                    Color.argb(50, 255, 255, 255), Color.TRANSPARENT,
+                    Color.argb(50, 255, 255, 255), Color.TRANSPARENT
                 )
                 LinearGradient(
                     0f, 0f, width * 0.5f, height * 0.5f,
@@ -160,7 +160,4 @@ object ImageAdjustmentApplier {
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
     }
 
-    private fun Int.withAlpha(alpha: Int): Int {
-        return (this and 0x00FFFFFF) or (alpha shl 24)
-    }
 }

@@ -51,7 +51,7 @@ class ImageEditorService(private val context: Context) {
         original: Bitmap,
         options: EditOptions,
         points: List<Pair<android.graphics.PointF, Boolean>>? = null
-    ): Bitmap? = withContext(Dispatchers.Default) {
+    ): Bitmap = withContext(Dispatchers.Default) {
         val totalStartTime = System.currentTimeMillis()
         try {
             val isDemo = settingsManager.isDemoMode.first()
@@ -67,7 +67,7 @@ class ImageEditorService(private val context: Context) {
             var (mask, glassMask) = if (useSam2Ultra) {
                 Timber.i("MODO SAM 2 ULTRA ATIVADO - Iniciando pipeline de segmentação cirúrgica")
                 val initialMask = segmenter.segmentVehicle(input)
-                val box = initialMask.extractBoundingBox()
+                val box = initialMask?.extractBoundingBox()
                 
                 val boxArray = if (box != null) floatArrayOf(box.left, box.top, box.right, box.bottom) else null
                 
@@ -90,7 +90,7 @@ class ImageEditorService(private val context: Context) {
                 return@withContext PostProcessor.refineImage(input, options)
             }
 
-            // 3. ESTÁGIO IA 1: GEMINI P/ ESTRUTURA E REFRACÇÃO DE VIDROS
+            // 3. ESTÁGIO IA 1: GEMINI P/ ESTRUTURA E REFRAÇÃO DE VIDROS
             // QUALIDADE MÁXIMA - Vidros com transparência e refração real
             val usePro = settingsManager.useProModels.first()
             val sceneDescription = options.selectedStudioScene?.name ?: options.background.description
@@ -149,7 +149,7 @@ class ImageEditorService(private val context: Context) {
             val provider = aiProviderManager.getPrimaryProvider()
             if (!provider.isAvailable) return@withContext "Oferta imperdível no StudioCar!"
 
-            val vinData = "Marca: ${car.brand}, Modelo: ${car.model}, Ano: ${car.year}, Cor: ${car.color}"
+            val vinData = "Marca: ${car.carBrand}, Modelo: ${car.carModel}, Ano: ${car.carYear}, Cor: ${car.carColor}"
             val optData = "Background: ${options.background.name}, Pack: ${if(options.isDealershipMode) "Platinum" else "Standard"}"
             
             provider.generateCaption(OpenRouterConfig.getCaptionPrompt(vinData, optData)) 

@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,17 +26,19 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.studiocar.studio.data.models.ExportSize
+import com.studiocar.studio.ui.theme.*
 import com.studiocar.studio.utils.SettingsManager
 import kotlinx.coroutines.launch
 
 /**
- * SettingsScreen V2.0 - StudioCar Elite Management.
+ * SettingsScreen V2.1.0 - StudioCar Elite Management.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
-    settingsManager: SettingsManager
+    settingsManager: SettingsManager,
+    onNavigateToAbout: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -54,22 +57,23 @@ fun SettingsScreen(
     }
     val smartFramingEnabled by settingsManager.smartFramingEnabled.collectAsState(initial = true)
     val preferredCarType by settingsManager.preferredCarType.collectAsState(initial = "SEDAN")
+    val advancedStabilization by settingsManager.advancedStabilization.collectAsState(initial = true)
 
     val logoLauncher = rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { scope.launch { settingsManager.setDealershipLogo(context, it.toString()) } }
+        uri?.let { scope.launch { settingsManager.setDealershipLogo(it.toString()) } }
     }
 
     Scaffold(
-        containerColor = Color(0xFF0F0F0F),
+        containerColor = DarkBackground,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("CONFIGURAÇÕES ELITE", fontSize = 14.sp, fontWeight = FontWeight.Black) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White) }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent, titleContentColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, titleContentColor = Color.White)
             )
         }
     ) { padding ->
@@ -125,10 +129,11 @@ fun SettingsScreen(
                 Button(
                     onClick = { logoLauncher.launch("image/*") },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E1E1E)),
-                    shape = RoundedCornerShape(12.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = StudioSurfaceVariant),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
                 ) {
-                    Icon(Icons.Default.UploadFile, null, tint = Color.Cyan)
+                    Icon(Icons.Default.UploadFile, null, tint = StudioCyan)
                     Spacer(modifier = Modifier.width(12.dp))
                     Text("LOGOTIPO DA LOJA (.PNG)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
@@ -159,53 +164,45 @@ fun SettingsScreen(
                             onValueChange = { scope.launch { settingsManager.setBatchCount(it.toInt()) } },
                             valueRange = 4f..10f,
                             steps = 5,
-                            colors = SliderDefaults.colors(thumbColor = Color.Cyan, activeTrackColor = Color.Cyan)
+                            colors = SliderDefaults.colors(thumbColor = StudioCyan, activeTrackColor = StudioCyan)
                         )
                     }
                 }
             }
 
-            // --- SEÇÃO: ASSISTÊNCIA DE CÂMERA (#24) ---
-            SettingsSection("ASSISTÊNCIA DE CÂMERA") {
+            // --- SEÇÃO: CÂMERA ---
+            SettingsSection("CÂMERA") {
                 SettingsSwitch(
-                    title = "GUIA DE ENQUADRAMENTO INTELIGENTE",
-                    subtitle = "Dicas visuais e correção de altura em tempo real",
-                    checked = smartFramingEnabled,
-                    onCheckedChange = { scope.launch { settingsManager.setSmartFramingEnabled(it) } }
+                    title = "ESTABILIZAÇÃO AVANÇADA",
+                    subtitle = "Usa OIS e redução de tremores para capturas mais nítidas",
+                    checked = advancedStabilization,
+                    onCheckedChange = { scope.launch { settingsManager.setAdvancedStabilization(it) } }
                 )
+            }
 
-                if (smartFramingEnabled) {
-                    Column {
-                        Text("TIPO DE VEÍCULO PARA AJUSTE DE ALTURA", color = Color.Gray, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            ExportChip("SEDAN / MÉDIO", preferredCarType == "SEDAN") {
-                                scope.launch { settingsManager.setPreferredCarType("SEDAN") }
-                            }
-                            ExportChip("SUV / ALTO", preferredCarType == "SUV") {
-                                scope.launch { settingsManager.setPreferredCarType("SUV") }
-                            }
-                        }
-                    }
+            // --- SEÇÃO: SISTEMA ---
+            SettingsSection("SISTEMA") {
+                Button(
+                    onClick = onNavigateToAbout,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = StudioSurfaceVariant),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+                ) {
+                    Icon(Icons.Default.Info, null, tint = StudioCyan)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("SOBRE O STUDIOCAR", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
-            SettingsSection("QUALIDADE DE EXPORTAÇÃO") {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ExportChip("THUMB", exportSize == ExportSize.THUMBNAIL_CRM) { scope.launch { settingsManager.setDefaultExportSize(ExportSize.THUMBNAIL_CRM.name) } }
-                    ExportChip("MEDIUM", exportSize == ExportSize.MEDIUM_WHATSAPP) { scope.launch { settingsManager.setDefaultExportSize(ExportSize.MEDIUM_WHATSAPP.name) } }
-                    ExportChip("4K", exportSize == ExportSize.ORIGINAL_4K) { scope.launch { settingsManager.setDefaultExportSize(ExportSize.ORIGINAL_4K.name) } }
-                }
-            }
-
-            // Version Info
+            // Footer
             Column(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(Icons.Default.CheckCircle, null, tint = Color.Cyan, modifier = Modifier.size(24.dp))
+                Icon(Icons.Default.CheckCircle, null, tint = StudioCyan, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("StudioCar Professional V2.0.0", color = Color.Gray, fontSize = 11.sp, fontWeight = FontWeight.Black)
+                Text("StudioCar Elite Suite V2.1.0", color = Color.Gray, fontSize = 11.sp, fontWeight = FontWeight.Black)
                 Text("B2B ENTERPRISE LICENSE ACTIVE", color = Color.DarkGray, fontSize = 9.sp, fontWeight = FontWeight.Black)
             }
         }
@@ -215,7 +212,7 @@ fun SettingsScreen(
 @Composable
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(title, color = Color.Cyan, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+        Text(title, color = StudioCyan, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
         content()
     }
 }
@@ -223,7 +220,7 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
 @Composable
 fun SettingsSwitch(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Surface(
-        color = Color(0xFF151515),
+        color = StudioSurfaceVariant,
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
@@ -239,8 +236,8 @@ fun SettingsSwitch(title: String, subtitle: String, checked: Boolean, onCheckedC
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.Cyan,
-                    checkedTrackColor = Color.Cyan.copy(alpha = 0.4f)
+                    checkedThumbColor = StudioCyan,
+                    checkedTrackColor = StudioCyan.copy(alpha = 0.4f)
                 )
             )
         }
@@ -252,12 +249,12 @@ private fun ExportChip(label: String, selected: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         modifier = Modifier.height(40.dp),
-        color = if (selected) Color.Cyan else Color(0xFF151515),
+        color = if (selected) StudioCyan else StudioSurfaceVariant,
         shape = RoundedCornerShape(20.dp),
         border = if (selected) null else BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
     ) {
         Box(modifier = Modifier.padding(horizontal = 20.dp), contentAlignment = Alignment.Center) {
-            Text(label, color = if (selected) Color.Black else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Black)
+            Text(label, color = if (selected) StudioBlack else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Black)
         }
     }
 }
@@ -265,10 +262,10 @@ private fun ExportChip(label: String, selected: Boolean, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun textFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = Color.Cyan,
+    focusedBorderColor = StudioCyan,
     unfocusedBorderColor = Color.DarkGray,
-    focusedLabelColor = Color.Cyan,
-    cursorColor = Color.Cyan,
+    focusedLabelColor = StudioCyan,
+    cursorColor = StudioCyan,
     focusedTextColor = Color.White,
     unfocusedTextColor = Color.White
 )

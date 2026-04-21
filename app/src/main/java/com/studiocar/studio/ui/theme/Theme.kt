@@ -6,20 +6,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val EliteColorScheme = darkColorScheme(
     primary = StudioCyan,
+    onPrimary = StudioBlack,
+    primaryContainer = StudioMetallicBlue,
+    onPrimaryContainer = Color.White,
     secondary = StudioGold,
+    onSecondary = StudioBlack,
     tertiary = SuccessGreen,
     background = DarkBackground,
+    onBackground = Color.White,
     surface = StudioSurface,
-    onPrimary = StudioBlack,
-    onSecondary = StudioBlack,
-    onBackground = androidx.compose.ui.graphics.Color.White,
-    onSurface = androidx.compose.ui.graphics.Color.White
+    onSurface = Color.White,
+    surfaceVariant = StudioSurfaceVariant,
+    onSurfaceVariant = Color.Gray,
+    outline = BorderColor,
+    error = ErrorRed
 )
 
 @Composable
@@ -32,8 +39,13 @@ fun StudioCarTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
+            @Suppress("DEPRECATION")
             window.statusBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            @Suppress("DEPRECATION")
+            window.navigationBarColor = colorScheme.background.toArgb()
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = false
+            controller.isAppearanceLightNavigationBars = false
         }
     }
 

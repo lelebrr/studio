@@ -8,7 +8,6 @@ import com.studiocar.studio.utils.SecurityUtils
 import timber.log.Timber
 
 class ClaudeProvider(
-    private val context: Context,
     private val securityUtils: SecurityUtils
 ) : ImageAIProvider {
 
@@ -24,7 +23,7 @@ class ClaudeProvider(
         prompt: String,
         options: EditOptions
     ): Bitmap? {
-        val apiKey = securityUtils.getApiKey(id) ?: return null
+        securityUtils.getApiKey(id) ?: return null
         return try {
             Timber.i("Processando com Claude 3.5 Sonnet Vision...")
             bitmap
@@ -33,7 +32,7 @@ class ClaudeProvider(
         }
     }
 
-    override suspend fun generateCaption(prompt: String): String? {
+    override suspend fun generateCaption(prompt: String): String {
         return "Legenda refinada por Claude AI."
     }
 

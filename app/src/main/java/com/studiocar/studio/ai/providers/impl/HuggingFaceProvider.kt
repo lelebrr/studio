@@ -8,7 +8,6 @@ import com.studiocar.studio.utils.SecurityUtils
 import timber.log.Timber
 
 class HuggingFaceProvider(
-    private val context: Context,
     private val securityUtils: SecurityUtils
 ) : ImageAIProvider {
 
@@ -19,12 +18,12 @@ class HuggingFaceProvider(
         get() = !securityUtils.getApiKey(id).isNullOrEmpty()
 
     override suspend fun editCarImage(bitmap: Bitmap, mask: Bitmap?, prompt: String, options: EditOptions): Bitmap? {
-        val apiKey = securityUtils.getApiKey(id) ?: return null
+        securityUtils.getApiKey(id) ?: return null
         Timber.i("Hugging Face: Chamando inference API...")
         return bitmap
     }
 
-    override suspend fun generateCaption(prompt: String): String? = "Hugging Face Vision Model"
+    override suspend fun generateCaption(prompt: String): String = "Hugging Face Vision Model"
 
     override suspend fun testConnection(): Boolean = !securityUtils.getApiKey(id).isNullOrEmpty()
 }

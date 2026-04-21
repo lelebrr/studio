@@ -2,6 +2,9 @@ package com.studiocar.studio.network
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -45,7 +48,6 @@ data class NhtsaResult(
 object VinDecoderModule {
     private val json = kotlinx.serialization.json.Json {
         ignoreUnknownKeys = true
-        coerceInputValues = true
     }
 
     val vinDecoderApi: VinDecoderApi by lazy {
@@ -58,9 +60,7 @@ object VinDecoderModule {
                     .build()
             )
             .addConverterFactory(
-                com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory(
-                    okhttp3.MediaType.Companion.toMediaType("application/json")
-                )
+                json.asConverterFactory("application/json".toMediaType())
             )
             .build()
             .create(VinDecoderApi::class.java)

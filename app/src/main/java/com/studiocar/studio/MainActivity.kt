@@ -19,9 +19,10 @@ import com.studiocar.studio.ui.viewmodels.EditorViewModel
 import com.studiocar.studio.utils.SettingsManager
 
 /**
- * MainActivity V2.0.0 - StudioCar Elite Professional Suite.
+ * MainActivity V2.1.1 - StudioCar Elite Professional Suite.
  * Core orchestrator for the B2B professional photography workflow.
  */
+@Suppress("unused")
 class MainActivity : ComponentActivity() {
 
     private val editorViewModel: EditorViewModel by viewModels()
@@ -62,8 +63,17 @@ fun NavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "camera"
+        startDestination = "main"
     ) {
+        composable("main") {
+            MainScreen(
+                viewModel = viewModel,
+                onNavigateToCamera = { navController.navigate("camera") },
+                onNavigateToSettings = { navController.navigate("settings") },
+                onNavigateToHistory = { navController.navigate("history") }
+            )
+        }
+
         composable("camera") {
             CameraScreen(
                 viewModel = viewModel,
@@ -105,7 +115,14 @@ fun NavGraph(
         composable("settings") {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
-                settingsManager = settingsManager
+                settingsManager = settingsManager,
+                onNavigateToAbout = { navController.navigate("about") }
+            )
+        }
+
+        composable("about") {
+            AboutScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }

@@ -8,7 +8,6 @@ import com.studiocar.studio.utils.SecurityUtils
 import timber.log.Timber
 
 class TogetherAIProvider(
-    private val context: Context,
     private val securityUtils: SecurityUtils
 ) : ImageAIProvider {
 
@@ -19,12 +18,12 @@ class TogetherAIProvider(
         get() = !securityUtils.getApiKey(id).isNullOrEmpty()
 
     override suspend fun editCarImage(bitmap: Bitmap, mask: Bitmap?, prompt: String, options: EditOptions): Bitmap? {
-        val apiKey = securityUtils.getApiKey(id) ?: return null
+        securityUtils.getApiKey(id) ?: return null
         Timber.i("Together AI: Processando com latência ultra-baixa...")
         return bitmap
     }
 
-    override suspend fun generateCaption(prompt: String): String? = "Together AI Vision Output"
+    override suspend fun generateCaption(prompt: String): String = "Together AI Vision Output"
 
     override suspend fun testConnection(): Boolean = !securityUtils.getApiKey(id).isNullOrEmpty()
 }

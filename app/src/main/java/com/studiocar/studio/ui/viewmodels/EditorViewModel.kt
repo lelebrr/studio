@@ -78,6 +78,19 @@ class EditorViewModel : ViewModel() {
     private val _currentProviderName = MutableStateFlow<String?>(null)
     val currentProviderName = _currentProviderName.asStateFlow()
 
+    private val _isScanningVin = MutableStateFlow(false)
+    val isScanningVin = _isScanningVin.asStateFlow()
+
+    private val _scannedVin = MutableStateFlow<String?>(null)
+    val scannedVin = _scannedVin.asStateFlow()
+
+    // --- CAMERA STABILIZATION & VEHICLE DETECTION ---
+    private val _detectedVehicleType = MutableStateFlow<VehicleType?>(null)
+    val detectedVehicleType = _detectedVehicleType.asStateFlow()
+
+    private val _isCameraStable = MutableStateFlow(false)
+    val isCameraStable = _isCameraStable.asStateFlow()
+
     private var _aiProviderManager: AIProviderManager? = null
     fun getAiProviderManager(context: Context): AIProviderManager {
         if (_aiProviderManager == null) _aiProviderManager = AIProviderManager(context.applicationContext)
@@ -158,6 +171,10 @@ class EditorViewModel : ViewModel() {
         _options.value = newOptions
     }
 
+    fun toggleDealershipMode(enabled: Boolean) {
+        _options.value = _options.value.copy(isDealershipMode = enabled)
+    }
+
     fun selectStudioScene(scene: StudioScene?) {
         _options.value = _options.value.copy(selectedStudioScene = scene)
     }
@@ -175,8 +192,18 @@ class EditorViewModel : ViewModel() {
     }
 
     fun onVinDetected(vin: String) {
+        _scannedVin.value = vin
+        _isScanningVin.value = false
         _carMetadata.value = _carMetadata.value.copy(vinCode = vin)
         decodeVin(vin)
+    }
+
+    fun setScanningVin(scanning: Boolean) {
+        _isScanningVin.value = scanning
+    }
+
+    fun confirmVin() {
+        _isScanningVin.value = false
     }
 
     private fun decodeVin(vin: String) {
@@ -187,11 +214,21 @@ class EditorViewModel : ViewModel() {
                     _carMetadata.value = _carMetadata.value.copy(
                         carBrand = res.make,
                         carModel = res.model,
-                        carYear = res.modelYear ?: ""
+                        carYear = res.modelYear
                     )
                 }
             } catch (e: Exception) { Timber.e(e) }
         }
+    }
+
+    // --- CAMERA SENSOR & DETECTION ACTIONS ---
+    
+    fun updateDetectedVehicleType(type: VehicleType?) {
+        _detectedVehicleType.value = type
+    }
+
+    fun updateCameraStability(isStable: Boolean) {
+        _isCameraStable.value = isStable
     }
 
     // --- ADJUSTMENT ACTIONS ---

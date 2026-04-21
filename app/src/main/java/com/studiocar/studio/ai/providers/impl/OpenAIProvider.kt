@@ -8,7 +8,6 @@ import com.studiocar.studio.utils.SecurityUtils
 import timber.log.Timber
 
 class OpenAIProvider(
-    private val context: Context,
     private val securityUtils: SecurityUtils
 ) : ImageAIProvider {
 
@@ -24,7 +23,7 @@ class OpenAIProvider(
         prompt: String,
         options: EditOptions
     ): Bitmap? {
-        val apiKey = securityUtils.getApiKey(id) ?: return null
+        securityUtils.getApiKey(id) ?: return null
         return try {
             Timber.i("OpenAI: Editando imagem com DALL-E 3...")
             bitmap
@@ -33,7 +32,7 @@ class OpenAIProvider(
         }
     }
 
-    override suspend fun generateCaption(prompt: String): String? {
+    override suspend fun generateCaption(prompt: String): String {
         return "Veículo de alto desempenho (OpenAI Vision)."
     }
 

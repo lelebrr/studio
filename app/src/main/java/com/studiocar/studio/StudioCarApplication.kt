@@ -3,6 +3,7 @@ package com.studiocar.studio
 import android.app.Application
 import timber.log.Timber
 
+@Suppress("unused")
 class StudioCarApplication : Application() {
     override fun onCreate() {
         super.onCreate()

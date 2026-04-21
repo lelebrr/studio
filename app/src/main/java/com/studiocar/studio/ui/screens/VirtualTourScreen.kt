@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled._360
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled._360
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -45,9 +45,9 @@ fun VirtualTourScreen(
             CenterAlignedTopAppBar(
                 title = { Text("TOUR VIRTUAL 360°", fontSize = 14.sp, fontWeight = FontWeight.Black) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, null, tint = Color.White) }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White) }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent, titleContentColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, titleContentColor = Color.White)
             )
         }
     ) { padding ->
@@ -140,7 +140,7 @@ fun TourViewer(
             shape = CircleShape
         ) {
             Icon(
-                Icons.Default._360,
+                Icons.AutoMirrored.Filled._360,
                 null,
                 tint = Color.Cyan,
                 modifier = Modifier.padding(8.dp).size(24.dp)
@@ -152,7 +152,7 @@ fun TourViewer(
 @Composable
 fun EmptyTourView() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(Icons.Default._360, null, tint = Color.DarkGray, modifier = Modifier.size(64.dp))
+        Icon(Icons.AutoMirrored.Filled._360, null, tint = Color.DarkGray, modifier = Modifier.size(64.dp))
         Spacer(modifier = Modifier.height(16.dp))
         Text("CAPTURE UM LOTE DE FOTOS PARA INICIAR O TOUR", color = Color.Gray, fontSize = 12.sp)
     }

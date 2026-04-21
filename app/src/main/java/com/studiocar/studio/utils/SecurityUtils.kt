@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.studiocar.studio.utils
 
 import android.content.Context
@@ -8,6 +9,7 @@ import androidx.core.content.edit
 /**
  * Utilitário de segurança para chaves sensíveis (OpenRouter API Key).
  */
+@Suppress("DEPRECATION")
 class SecurityUtils(context: Context) {
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)

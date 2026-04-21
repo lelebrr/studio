@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.graphicsLayer
 import com.studiocar.studio.ui.theme.StudioCarAnimations
 import com.studiocar.studio.ui.theme.premiumEntrance
@@ -28,6 +29,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,15 +46,14 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import com.studiocar.studio.data.models.PhotoAngle
-import com.studiocar.studio.data.models.PhotoMode
-import com.studiocar.studio.ui.components.AngleGuideOverlay
-import com.studiocar.studio.ui.components.PhotoModeSelector
-import com.studiocar.studio.ui.components.VinScannerOverlay
+import com.studiocar.studio.ui.components.*
+import com.studiocar.studio.data.models.*
 import com.studiocar.studio.ui.viewmodels.EditorViewModel
-import com.studiocar.studio.ui.components.AIProvidersBottomSheet
+import com.studiocar.studio.utils.SettingsManager
 import timber.log.Timber
 import java.util.concurrent.Executors
 import com.studiocar.studio.utils.CarFramingGuide
@@ -60,18 +62,33 @@ import com.studiocar.studio.ui.components.FramingFeedbackIndicator
 import com.studiocar.studio.ui.components.LightbulbButton
 import com.studiocar.studio.ui.components.CarTipsPanel
 import com.studiocar.studio.ui.components.ProCameraSettingsPanel
-import com.studiocar.studio.ui.components.HistogramOverlay
+import android.content.Context
 import android.graphics.Color as AndroidColor
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory
 import androidx.compose.ui.draw.blur
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.content.res.Configuration
+import com.studiocar.studio.camera.CameraOrientationManager
+import com.studiocar.studio.ui.components.OrientationWarningOverlay
+import com.studiocar.studio.ui.components.OrientationSuccessToast
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import com.studiocar.studio.ai.VehicleTypeDetector
+import com.studiocar.studio.utils.VehicleSilhouetteManager
+import kotlin.math.abs
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.camera.camera2.interop.ExperimentalCamera2Interop::class, androidx.camera.core.ExperimentalGetImage::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    androidx.camera.camera2.interop.ExperimentalCamera2Interop::class,
+    androidx.camera.core.ExperimentalGetImage::class
+)
 @Composable
 fun CameraScreen(
-    viewModel: EditorViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    viewModel: EditorViewModel = viewModel(),
     onNavigateToEditor: () -> Unit,
     onNavigateToBatchEditor: () -> Unit
 ) {
@@ -94,8 +111,13 @@ fun CameraScreen(
     
     val settingsManager = remember { SettingsManager(context) }
     val smartFramingEnabled by settingsManager.smartFramingEnabled.collectAsState(initial = true)
+    val advancedStabilization by settingsManager.advancedStabilization.collectAsState(initial = true)
     val carTypeStr by settingsManager.preferredCarType.collectAsState(initial = "SEDAN")
     val carType = if (carTypeStr == "SUV") CarFramingGuide.CarType.SUV else CarFramingGuide.CarType.SEDAN
+
+    val detectedVehicleType by viewModel.detectedVehicleType.collectAsState()
+    val isCameraStable by viewModel.isCameraStable.collectAsState()
+    val vehicleDetector = remember { VehicleTypeDetector() }
 
     val proSettings by viewModel.cameraSettings.collectAsState()
     val histogramData by viewModel.histogramData.collectAsState()
@@ -107,8 +129,75 @@ fun CameraScreen(
     var focusPoint by remember { mutableStateOf<Offset?>(null) }
     var focusVisibility by remember { mutableStateOf(false) }
 
+    // Orientation Management
+    val orientationManager = remember { CameraOrientationManager(context) }
+    val currentOrientation = orientationManager.rememberOrientation()
+    var userIgnoredOrientationWarning by remember { mutableStateOf(false) }
+    var showSuccessToast by remember { mutableStateOf(false) }
+    
+    val isLandscapeRecommended = orientationManager.isLandscapeRecommended(options)
+    val shouldShowWarning = orientationManager.shouldShowRotationWarning(options, currentOrientation) && !userIgnoredOrientationWarning
+
+    // Reset ignore flag when angle changes
+    LaunchedEffect(options.currentAngle, options.photoMode) {
+        userIgnoredOrientationWarning = false
+    }
+
+    // Success Toast Logic
+    LaunchedEffect(currentOrientation) {
+        if (isLandscapeRecommended && currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+            showSuccessToast = true
+            delay(3000)
+            showSuccessToast = false
+        }
+    }
+
+    // Sensor de Estabilidade
+    DisposableEffect(advancedStabilization) {
+        if (advancedStabilization) {
+            val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+            val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+            
+            val listener = object : SensorEventListener {
+                private var lastX = 0f
+                private var lastY = 0f
+                private var lastZ = 0f
+                private var lastUpdate: Long = 0
+
+                override fun onSensorChanged(event: SensorEvent) {
+                    val curTime = System.currentTimeMillis()
+                    if ((curTime - lastUpdate) > 100) {
+                        val diffTime = (curTime - lastUpdate)
+                        lastUpdate = curTime
+
+                        val x = event.values[0]
+                        val y = event.values[1]
+                        val z = event.values[2]
+
+                        val speed = abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000
+                        viewModel.updateCameraStability(speed < 150) // Threshold for stability
+                        
+                        lastX = x
+                        lastY = y
+                        lastZ = z
+                    }
+                }
+                override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+            }
+            sensorManager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+            onDispose { sensorManager.unregisterListener(listener) }
+        } else {
+            viewModel.updateCameraStability(false)
+            onDispose {}
+        }
+    }
+
+    val density = LocalDensity.current
+    fun Float.toComposeDp() = with(density) { this@toComposeDp.toDp() }
+
     // CameraX Initialization
-    val imageCapture = remember(proSettings.resolution, proSettings.quality) {
+    @Suppress("DEPRECATION")
+    val imageCapture = remember<ImageCapture>(proSettings.resolution, proSettings.quality) {
         val builder = ImageCapture.Builder()
             .setCaptureMode(if(proSettings.quality == CameraQuality.MAXIMUM) ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY else ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .setFlashMode(flashMode)
@@ -128,6 +217,12 @@ fun CameraScreen(
             extender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX)
             val gains = calculateWbGains(proSettings.whiteBalanceTemp)
             extender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_GAINS, android.hardware.camera2.params.RggbChannelVector(gains.first, 1.0f, 1.0f, gains.second))
+        }
+
+        // Estabilização Avançada
+        if (advancedStabilization) {
+            extender.setCaptureRequestOption(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON)
+            extender.setCaptureRequestOption(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON)
         }
 
         builder.build()
@@ -163,7 +258,7 @@ fun CameraScreen(
                                         val value = barcode.rawValue
                                         if (value != null && (value.length == 17)) {
                                             viewModel.onVinDetected(value)
-                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         }
                                     }
                                 }
@@ -171,11 +266,7 @@ fun CameraScreen(
 
                         // 3. Guia de Enquadramento Inteligente (#24)
                         if (smartFramingEnabled && options.photoMode == PhotoMode.EXTERIOR) {
-                            // Simulação de detecção baseada em áreas de contraste ou luminosidade central
-                            // [PRO] Em produção, aqui integraríamos o MediaPipe Object Detector
                             val carBox = if (avgLuma > 20) {
-                                // Em produção: Integrar MediaPipe Object Detector para tracking do veículo em tempo real
-                                // Para uso atual: Bounding Box estático cobrindo a silhueta padrão do carro
                                 android.graphics.RectF(0.2f, 0.4f, 0.8f, 0.8f)
                             } else null
                             
@@ -196,6 +287,13 @@ fun CameraScreen(
                             viewModel.updateHistogram(hist)
                         } else {
                             viewModel.updateHistogram(null)
+                        }
+
+                        // 5. Detecção de Tipo de Veículo
+                        if (!isScanningVin && options.photoMode == PhotoMode.EXTERIOR) {
+                            vehicleDetector.processImage(imageProxy) { type ->
+                                viewModel.updateDetectedVehicleType(type)
+                            }
                         }
                     }
                     imageProxy.close()
@@ -260,6 +358,12 @@ fun CameraScreen(
                             previewExtender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_GAINS, android.hardware.camera2.params.RggbChannelVector(gains.first, 1.0f, 1.0f, gains.second))
                         }
 
+                        // Estabilização Avançada no Preview
+                        if (advancedStabilization) {
+                            previewExtender.setCaptureRequestOption(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON)
+                            previewExtender.setCaptureRequestOption(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON)
+                        }
+
                         // Aplicar EV via CameraControl
                         camera?.cameraControl?.setExposureCompensationIndex(
                             (proSettings.exposureCompensation * (camera?.cameraInfo?.exposureState?.exposureCompensationRange?.upper ?: 12)).toInt()
@@ -290,8 +394,8 @@ fun CameraScreen(
         if (!isScanningVin && options.photoMode == PhotoMode.EXTERIOR) {
             AnimatedVisibility(
                 visible = true,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
+                enter = fadeIn() + slideInVertically(),
+                exit = fadeOut() + slideOutVertically()
             ) {
                 AngleGuideOverlay(
                     currentAngle = options.currentAngle,
@@ -303,6 +407,12 @@ fun CameraScreen(
             // Overlays Inteligentes (#24)
             if (smartFramingEnabled) {
                 HorizonLine()
+                
+                // Silhueta do Veículo
+                VehicleSilhouetteManager.SilhouetteOverlay(
+                    type = detectedVehicleType,
+                    angle = options.currentAngle
+                )
                 
                 // Feedback de enquadramento animado
                 AnimatedVisibility(
@@ -330,8 +440,8 @@ fun CameraScreen(
             VinScannerOverlay(
                 isScanning = scannedVin == null,
                 scannedVin = scannedVin,
-                decodedInfo = vinInfo?.let { 
-                    com.studiocar.studio.ui.components.VinDecodedInfo(it.make, it.model, it.year) 
+                decodedInfo = vinInfo.let { 
+                    com.studiocar.studio.ui.components.VinDecodedInfo(it.carBrand ?: "", it.carModel ?: "", it.carYear ?: "") 
                 },
                 onClose = { viewModel.setScanningVin(false) },
                 onConfirm = { viewModel.confirmVin() }
@@ -363,6 +473,30 @@ fun CameraScreen(
             )
         }
 
+        // Indicador de Estabilidade
+        if (advancedStabilization) {
+            AnimatedVisibility(
+                visible = isCameraStable,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 100.dp)
+            ) {
+                Surface(
+                    color = Color.Black.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color.Green))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Estável", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
         // Timer Countdown
         if (timerCountdown > 0) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -389,13 +523,13 @@ fun CameraScreen(
         if (focusVisibility && focusPoint != null) {
             Box(
                 modifier = Modifier
-                    .offset(x = focusPoint!!.x.toDp() - 30.dp, y = focusPoint!!.y.toDp() - 30.dp)
+                    .offset(x = focusPoint!!.x.toComposeDp() - 30.dp, y = focusPoint!!.y.toComposeDp() - 30.dp)
                     .size(60.dp)
                     .border(1.dp, Color.Cyan, CircleShape)
             )
             Box(
                 modifier = Modifier
-                    .offset(x = focusPoint!!.x.toDp() - 2.dp, y = focusPoint!!.y.toDp() - 2.dp)
+                    .offset(x = focusPoint!!.x.toComposeDp() - 2.dp, y = focusPoint!!.y.toComposeDp() - 2.dp)
                     .size(4.dp)
                     .background(Color.Cyan, CircleShape)
             )
@@ -448,8 +582,20 @@ fun CameraScreen(
                         })
                     }
                 },
-                onFinishBatch = onNavigateToBatchEditor
+                onFinishBatch = onNavigateToBatchEditor,
+                captureBlocked = isLandscapeRecommended && currentOrientation == Configuration.ORIENTATION_PORTRAIT && !userIgnoredOrientationWarning
             )
+        }
+
+        // Overlays de Orientação
+        if (shouldShowWarning) {
+            OrientationWarningOverlay(
+                onDismiss = { userIgnoredOrientationWarning = true }
+            )
+        }
+
+        if (showSuccessToast) {
+            OrientationSuccessToast()
         }
     }
 
@@ -525,14 +671,15 @@ private fun CameraBottomBar(
     options: com.studiocar.studio.data.models.EditOptions,
     batchCount: Int,
     onCapture: () -> Unit,
-    onFinishBatch: () -> Unit
+    onFinishBatch: () -> Unit,
+    captureBlocked: Boolean = false
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
     val buttonScale by animateFloatAsState(
         targetValue = if (isPressed) 0.9f else 1f,
-        animationSpec = com.studiocar.studio.ui.theme.StudioCarAnimations.ResponsiveSpring,
+        animationSpec = StudioCarAnimations.ResponsiveSpring,
         label = "capture_button_scale"
     )
 
@@ -546,7 +693,7 @@ private fun CameraBottomBar(
         if (options.batchMode) {
             Text(
                 "LOTE: $batchCount / ${options.batchCount}",
-                color = com.studiocar.studio.ui.theme.StudioCyan,
+                color = StudioCyan,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Black
             )
@@ -567,31 +714,33 @@ private fun CameraBottomBar(
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,
-                        onClick = onCapture
-                    ),
+                        onClick = { if (!captureBlocked) onCapture() }
+                    )
+                    .then(if (captureBlocked) Modifier.graphicsLayer { alpha = 0.5f } else Modifier),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(CircleShape)
-                        .background(if (options.isDealershipMode) com.studiocar.studio.ui.theme.StudioCyan else Color.White)
+                        .background(if (options.isDealershipMode) StudioCyan else Color.White)
                         .then(if (isPressed) Modifier.background(Color.Gray.copy(alpha = 0.5f)) else Modifier)
                 )
             }
 
             // Finish Batch Button com Animação
-            AnimatedVisibility(
-                visible = options.batchMode && batchCount > 0,
-                enter = scaleIn(animationSpec = com.studiocar.studio.ui.theme.StudioCarAnimations.NaturalSpring) + fadeIn(),
-                exit = scaleOut() + fadeOut(),
-                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 32.dp)
-            ) {
-                IconButton(
-                    onClick = onFinishBatch,
-                    modifier = Modifier.background(com.studiocar.studio.ui.theme.StudioCyan, CircleShape)
+            Box(modifier = Modifier.align(Alignment.CenterEnd).padding(end = 32.dp)) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = options.batchMode && batchCount > 0,
+                    enter = scaleIn(animationSpec = StudioCarAnimations.NaturalSpring) + fadeIn(),
+                    exit = scaleOut() + fadeOut()
                 ) {
-                    Icon(Icons.Default.Check, null, tint = Color.Black)
+                    IconButton(
+                        onClick = onFinishBatch,
+                        modifier = Modifier.background(StudioCyan, CircleShape)
+                    ) {
+                        Icon(Icons.Default.Check, null, tint = Color.Black)
+                    }
                 }
             }
         }
@@ -612,6 +761,3 @@ private fun calculateWbGains(kelvin: Int): Pair<Float, Float> {
         r to b
     }
 }
-
-
-

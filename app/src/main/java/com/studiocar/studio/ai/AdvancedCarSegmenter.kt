@@ -78,7 +78,7 @@ class AdvancedCarSegmenter(private val context: Context) {
         // 1. Extração da Máscara Bruta
         val rawMask = extractMask(result, bitmap.width, bitmap.height)
         
-        // 2. Refinamento Morfologico Avançado (Remoção de halos e preservação de antenas)
+        // 2. Refinamento Morfológico Avançado (Remoção de halos e preservação de antenas)
         // QUALIDADE MÁXIMA - Bordas perfeitas sem halos
         val refinedMask = refineMaskEdges(rawMask)
         

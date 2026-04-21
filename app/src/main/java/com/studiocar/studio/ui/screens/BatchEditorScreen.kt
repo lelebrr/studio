@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,10 +46,10 @@ fun BatchEditorScreen(
                 title = { Text("LOTE STUDIO PRO", fontWeight = FontWeight.Black, fontSize = 14.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack, enabled = !isProcessing) { 
-                        Icon(Icons.Default.ArrowBack, null, tint = Color.White) 
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White) 
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent, titleContentColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, titleContentColor = Color.White)
             )
         },
         bottomBar = {

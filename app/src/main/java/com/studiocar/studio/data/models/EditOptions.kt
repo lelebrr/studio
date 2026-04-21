@@ -29,6 +29,7 @@ enum class PhotoAngle(val label: String, val description: String) {
     FRONT_THREE_QUARTER("Frente ¾", "Ângulo clássico de concessionária"),
     LEFT_SIDE("Lateral Esq", "Perfil lateral esquerdo completo"),
     RIGHT_SIDE("Lateral Dir", "Perfil lateral direito completo"),
+    REAR_THREE_QUARTER("Traseira ¾", "Vista traseira em ângulo dinâmico"),
     REAR("Traseira", "Vista traseira completa"),
     ANGLE_45("45°", "Ângulo dinâmico 45 graus"),
     FRONT("Frente", "Vista frontal direta")
@@ -120,5 +121,6 @@ data class EditOptions(
     val customBackgroundPath: String? = null,
 
     // SAM 2 Ultra Era (#2026)
-    val isSam2UltraEnabled: Boolean = true
+    val isSam2UltraEnabled: Boolean = true,
+    val aiModelId: String? = null
 )

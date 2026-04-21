@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -21,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.studiocar.studio.data.models.*
+import com.studiocar.studio.ui.theme.*
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +34,7 @@ fun ProCameraSettingsPanel(
         onDismissRequest = onDismiss,
         containerColor = Color.Transparent,
         dragHandle = null,
-        scrimColor = Color.Black.copy(alpha = 0.3f)
+        scrimColor = Color.Black.copy(alpha = 0.5f)
     ) {
         Box(
             modifier = Modifier
@@ -43,17 +43,29 @@ fun ProCameraSettingsPanel(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.85f),
-                            Color(0xFF121212).copy(alpha = 0.95f)
+                            StudioSurface.copy(alpha = 0.95f),
+                            StudioBlack.copy(alpha = 1.0f)
                         )
                     )
                 )
-                .padding(24.dp)
+                .padding(bottom = 32.dp)
         ) {
             Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
+                // Drag Indicator
+                Box(
+                    modifier = Modifier
+                        .width(40.dp)
+                        .height(4.dp)
+                        .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                        .align(Alignment.CenterHorizontally)
+                )
+
                 // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -62,164 +74,188 @@ fun ProCameraSettingsPanel(
                 ) {
                     Column {
                         Text(
-                            "Configurações Profissionais",
+                            "AJUSTES DE ESTÚDIO",
+                            style = MaterialTheme.typography.titleLarge,
                             color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp
                         )
                         Text(
-                            "Controle manual de estúdio",
-                            color = Color.Gray,
-                            fontSize = 12.sp
+                            "CONTROLES MANUAIS PRO",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = StudioCyan,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                     IconButton(
                         onClick = onDismiss,
-                        modifier = Modifier.background(Color.White.copy(alpha = 0.1f), CircleShape)
+                        modifier = Modifier.background(Color.White.copy(alpha = 0.05f), CircleShape)
                     ) {
                         Icon(Icons.Default.Close, null, tint = Color.White)
                     }
                 }
 
-                Divider(color = Color.White.copy(alpha = 0.1f))
-
                 // Seção: Presets
-                SettingSection(title = "Presests de Cena", icon = Icons.Default.AutoAwesome) {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ProfessionalGroup(title = "CENÁRIOS", icon = Icons.Default.AutoAwesome) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(vertical = 4.dp)
+                    ) {
                         items(CameraPreset.entries) { preset ->
                             PresetChip(
-                                label = preset.label,
-                                isSelected = false, // Presets aplicam e depois o usuário pode mexer
+                                label = preset.label.uppercase(),
                                 onClick = { onSettingsChanged(applyPreset(settings, preset)) }
                             )
                         }
                     }
                 }
 
-                // Seção: Exposição (ISO e Shutter)
-                SettingSection(title = "Exposição & Sensor", icon = Icons.Default.CameraAlt) {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        // ISO
+                // Seção: Exposição
+                ProfessionalGroup(title = "EXPOSIÇÃO", icon = Icons.Default.Brightness6) {
+                    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
                         ManualSliderControl(
-                            label = "ISO",
+                            label = "SENSIBILIDADE (ISO)",
                             value = settings.iso.toFloat(),
                             range = 100f..3200f,
                             displayValue = settings.iso.toString(),
                             onValueChange = { onSettingsChanged(settings.copy(iso = it.roundToInt())) }
                         )
 
-                        // Shutter Speed
                         val shutterDisplay = formatShutterSpeed(settings.shutterSpeedNanos)
                         ManualSliderControl(
-                            label = "Obturador",
+                            label = "OBTURADOR (SPEED)",
                             value = nanosToSliderPosition(settings.shutterSpeedNanos),
                             range = 0f..1f,
                             displayValue = shutterDisplay,
                             onValueChange = { onSettingsChanged(settings.copy(shutterSpeedNanos = sliderPositionToNanos(it))) }
                         )
 
-                        // EV
                         ManualSliderControl(
-                            label = "Comp. Exposição (EV)",
+                            label = "COMPENSAÇÃO (EV)",
                             value = settings.exposureCompensation,
                             range = -3f..3f,
-                            displayValue = String.format("%.1f", settings.exposureCompensation),
+                            displayValue = if (settings.exposureCompensation > 0) "+${String.format(java.util.Locale.getDefault(), "%.1f", settings.exposureCompensation)}" else String.format(java.util.Locale.getDefault(), "%.1f", settings.exposureCompensation),
                             onValueChange = { onSettingsChanged(settings.copy(exposureCompensation = it)) }
                         )
                     }
                 }
 
-                // Seção: White Balance
-                SettingSection(title = "Balanço de Branco", icon = Icons.Default.WbSunny) {
-                    ManualSliderControl(
-                        label = "Temperatura",
-                        value = settings.whiteBalanceTemp.toFloat(),
-                        range = 2500f..10000f,
-                        displayValue = "${settings.whiteBalanceTemp}K",
-                        onValueChange = { onSettingsChanged(settings.copy(whiteBalanceTemp = it.roundToInt())) }
-                    )
-                }
-
-                // Seção: Foco e Medição
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        ToggleBox(
-                            label = "Foco Manual / Trava",
-                            isActive = settings.isManualFocus,
-                            onClick = { onSettingsChanged(settings.copy(isManualFocus = !settings.isManualFocus)) }
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f)) {
-                        GridSelector(
-                            label = "Medição de Luz",
-                            current = settings.meteringMode.label,
-                            onClick = {
-                                val next = MeteringMode.entries[(settings.meteringMode.ordinal + 1) % MeteringMode.entries.size]
-                                onSettingsChanged(settings.copy(meteringMode = next))
-                            }
+                // Seção: Cor
+                ProfessionalGroup(title = "COR & BALANÇO", icon = Icons.Default.Palette) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        ManualSliderControl(
+                            label = "TEMPERATURA (WB)",
+                            value = settings.whiteBalanceTemp.toFloat(),
+                            range = 2500f..10000f,
+                            displayValue = "${settings.whiteBalanceTemp}K",
+                            onValueChange = { onSettingsChanged(settings.copy(whiteBalanceTemp = it.roundToInt())) }
                         )
                     }
                 }
 
-                // Seção: Outras Configurações
-                SettingSection(title = "Sistema & Auxiliares", icon = Icons.Default.Settings) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        // Resolução
-                        RowSetting(
-                            label = "Resolução de Captura",
-                            value = settings.resolution.label,
-                            onClick = {
-                                val next = CameraResolution.entries[(settings.resolution.ordinal + 1) % CameraResolution.entries.size]
-                                onSettingsChanged(settings.copy(resolution = next))
-                            }
-                        )
-                        // Timer
-                        RowSetting(
-                            label = "Timer",
-                            value = if (settings.timerSeconds == 0) "Desligado" else "${settings.timerSeconds}s",
-                            onClick = {
-                                val options = listOf(0, 3, 5, 10)
-                                val nextIndex = (options.indexOf(settings.timerSeconds) + 1) % options.size
-                                onSettingsChanged(settings.copy(timerSeconds = options[nextIndex]))
-                            }
-                        )
-                        // Grade
-                        RowSetting(
-                            label = "Grade de Enquadramento",
-                            value = settings.gridType.label,
-                            onClick = {
-                                val next = GridType.entries[(settings.gridType.ordinal + 1) % GridType.entries.size]
-                                onSettingsChanged(settings.copy(gridType = next))
-                            }
-                        )
-                        // Histograma
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Histograma em Tempo Real", color = Color.White, fontSize = 14.sp)
-                            Switch(
-                                checked = settings.showHistogram,
-                                onCheckedChange = { onSettingsChanged(settings.copy(showHistogram = it)) },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.Cyan)
-                            )
+                // Seção: Qualidade e Foco
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        color = StudioSurfaceVariant,
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, if(settings.isManualFocus) StudioCyan.copy(alpha = 0.5f) else Color.Transparent)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .clickable { onSettingsChanged(settings.copy(isManualFocus = !settings.isManualFocus)) }
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(if(settings.isManualFocus) Icons.Default.FilterCenterFocus else Icons.Default.CenterFocusWeak, null, tint = if(settings.isManualFocus) StudioCyan else Color.White)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("FOCO", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                            Text(if(settings.isManualFocus) "MANUAL" else "AUTO", color = if(settings.isManualFocus) StudioCyan else Color.Gray, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        color = StudioSurfaceVariant,
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .clickable {
+                                    val next = MeteringMode.entries[(settings.meteringMode.ordinal + 1) % MeteringMode.entries.size]
+                                    onSettingsChanged(settings.copy(meteringMode = next))
+                                }
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.Grain, null, tint = Color.White)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("MEDIÇÃO", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                            Text(settings.meteringMode.label.uppercase(), color = Color.Gray, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                // Seção: Outros
+                ProfessionalGroup(title = "SISTEMA", icon = Icons.Default.Tune) {
+                    ElevatedCard(
+                        colors = CardDefaults.elevatedCardColors(containerColor = StudioSurfaceVariant),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            SettingRow(
+                                label = "Resolução",
+                                value = settings.resolution.label,
+                                onClick = {
+                                    val next = CameraResolution.entries[(settings.resolution.ordinal + 1) % CameraResolution.entries.size]
+                                    onSettingsChanged(settings.copy(resolution = next))
+                                }
+                            )
+                            HorizontalDivider(color = Color.White.copy(alpha = 0.05f), modifier = Modifier.padding(vertical = 12.dp))
+                            SettingRow(
+                                label = "Timer de Estúdio",
+                                value = if (settings.timerSeconds == 0) "DESATIVADO" else "${settings.timerSeconds}S",
+                                onClick = {
+                                    val options = listOf(0, 3, 5, 10)
+                                    val nextIndex = (options.indexOf(settings.timerSeconds) + 1) % options.size
+                                    onSettingsChanged(settings.copy(timerSeconds = options[nextIndex]))
+                                }
+                            )
+                            HorizontalDivider(color = Color.White.copy(alpha = 0.05f), modifier = Modifier.padding(vertical = 12.dp))
+                            SettingRow(
+                                label = "Grade Auxiliar",
+                                value = settings.gridType.label.uppercase(),
+                                onClick = {
+                                    val next = GridType.entries[(settings.gridType.ordinal + 1) % GridType.entries.size]
+                                    onSettingsChanged(settings.copy(gridType = next))
+                                }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun SettingSection(
+private fun ProfessionalGroup(
     title: String,
     icon: ImageVector,
     content: @Composable () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(icon, null, tint = Color.Cyan, modifier = Modifier.size(16.dp))
-            Text(title, color = Color.Cyan, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(modifier = Modifier.size(24.dp).background(StudioCyan.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = StudioCyan, modifier = Modifier.size(14.dp))
+            }
+            Text(
+                title, 
+                style = MaterialTheme.typography.labelLarge, 
+                color = StudioCyan, 
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.5.sp
+            )
         }
         content()
     }
@@ -234,98 +270,71 @@ private fun ManualSliderControl(
     onValueChange: (Float) -> Unit
 ) {
     Column {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(label, color = Color.White, fontSize = 14.sp)
-            Text(displayValue, color = Color.Cyan, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(label, color = Color.Gray, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Surface(
+                color = Color.White.copy(alpha = 0.05f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    displayValue, 
+                    color = Color.White, 
+                    style = MaterialTheme.typography.bodyLarge, 
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
         }
+        Spacer(modifier = Modifier.height(8.dp))
         Slider(
             value = value,
             onValueChange = onValueChange,
             valueRange = range,
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
-                activeTrackColor = Color.Cyan,
-                inactiveTrackColor = Color.White.copy(alpha = 0.2f)
+                activeTrackColor = StudioCyan,
+                inactiveTrackColor = Color.White.copy(alpha = 0.1f)
             )
         )
     }
 }
 
 @Composable
-private fun PresetChip(label: String, isSelected: Boolean, onClick: () -> Unit) {
+private fun PresetChip(label: String, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
-        color = if (isSelected) Color.Cyan else Color.White.copy(alpha = 0.1f),
+        color = StudioSurfaceVariant,
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, if(isSelected) Color.Cyan else Color.White.copy(alpha = 0.2f))
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
     ) {
         Text(
             label,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            color = if (isSelected) Color.Black else Color.White,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            color = Color.White,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold
         )
     }
 }
 
 @Composable
-private fun ToggleBox(label: String, isActive: Boolean, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        color = Color.White.copy(alpha = 0.05f),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, if(isActive) Color.Cyan else Color.White.copy(alpha = 0.1f))
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(label, color = Color.White, fontSize = 12.sp)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(if(isActive) "MANUAL" else "AUTO", color = if(isActive) Color.Cyan else Color.Gray, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-private fun GridSelector(label: String, current: String, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        color = Color.White.copy(alpha = 0.05f),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(label, color = Color.White, fontSize = 12.sp)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(current.uppercase(java.util.Locale.ROOT), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-private fun RowSetting(label: String, value: String, onClick: () -> Unit) {
+private fun SettingRow(label: String, value: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
+            .clickable(onClick = onClick),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, color = Color.White, fontSize = 14.sp)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(value, color = Color.Gray, fontSize = 14.sp)
+        Text(label, color = Color.White, style = MaterialTheme.typography.bodyLarge)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(value, color = StudioCyan, fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelLarge)
             Icon(Icons.Default.ChevronRight, null, tint = Color.Gray, modifier = Modifier.size(16.dp))
         }
     }
 }
 
-// Helpers
+// Helpers (keep same logic)
 private fun formatShutterSpeed(nanos: Long): String {
     val seconds = nanos / 1_000_000_000.0
     return if (seconds >= 1.0) {
@@ -336,8 +345,6 @@ private fun formatShutterSpeed(nanos: Long): String {
 }
 
 private fun nanosToSliderPosition(nanos: Long): Float {
-    // Escala logarítmica ou mapeamento simples para fins demo: 1/1000 a 1s
-    // 0.0f = 1s, 1.0f = 1/1000s
     val minNanos = 1_000_000L // 1/1000s
     val maxNanos = 1_000_000_000L // 1s
     return 1f - ((nanos - minNanos).toFloat() / (maxNanos - minNanos))

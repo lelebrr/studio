@@ -114,7 +114,7 @@ class MediaPipeSegmenter(private val context: Context) {
             // Se fizemos downscale, a máscara precisa voltar ao tamanho original
             return@withContext if (processedBitmap != bitmap) {
                 mask.scale(bitmap.width, bitmap.height, false).also {
-                    com.studiocar.studio.utils.AppUtils.releaseBitmap(mask)
+                    AppUtils.releaseBitmap(mask)
                 }
             } else mask
             
@@ -129,7 +129,7 @@ class MediaPipeSegmenter(private val context: Context) {
         val byteBuffer = ByteBufferExtractor.extract(categoryMask)
         byteBuffer.rewind()
         
-        val maskBitmap = com.studiocar.studio.utils.AppUtils.acquireBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val maskBitmap = AppUtils.acquireBitmap(width, height, Bitmap.Config.ARGB_8888)
         val pixels = IntArray(width * height)
         
         for (i in 0 until width * height) {

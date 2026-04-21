@@ -74,6 +74,7 @@ class SettingsManager(private val context: Context) {
         private val CAM_TIMER = intPreferencesKey("cam_timer")
         private val CAM_GRID = stringPreferencesKey("cam_grid")
         private val CAM_HISTOGRAM = booleanPreferencesKey("cam_histogram")
+        private val ADVANCED_STABILIZATION = booleanPreferencesKey("advanced_stabilization")
 
         // Multi-Provider IA
         private val PRIMARY_AI_PROVIDER = stringPreferencesKey("primary_ai_provider")
@@ -142,6 +143,7 @@ class SettingsManager(private val context: Context) {
     val cameraTimer: Flow<Int> = context.dataStore.data.map { it[CAM_TIMER] ?: 0 }
     val cameraGrid: Flow<String> = context.dataStore.data.map { it[CAM_GRID] ?: "RULE_OF_THIRDS" }
     val cameraHistogram: Flow<Boolean> = context.dataStore.data.map { it[CAM_HISTOGRAM] ?: true }
+    val advancedStabilization: Flow<Boolean> = context.dataStore.data.map { it[ADVANCED_STABILIZATION] ?: true }
 
     // Multi-Provider IA
     val primaryAiProvider: Flow<String?> = context.dataStore.data.map { it[PRIMARY_AI_PROVIDER] ?: "openrouter" }
@@ -217,7 +219,7 @@ class SettingsManager(private val context: Context) {
         context.dataStore.edit { it[BATCH_COUNT] = count }
     }
 
-    suspend fun setDealershipLogo(context: Context, path: String) {
+    suspend fun setDealershipLogo(path: String) {
         setDealershipLogoPath(path)
     }
 
@@ -280,6 +282,7 @@ class SettingsManager(private val context: Context) {
     suspend fun setCameraTimer(seconds: Int) { context.dataStore.edit { it[CAM_TIMER] = seconds } }
     suspend fun setCameraGrid(type: String) { context.dataStore.edit { it[CAM_GRID] = type } }
     suspend fun setCameraHistogram(enabled: Boolean) { context.dataStore.edit { it[CAM_HISTOGRAM] = enabled } }
+    suspend fun setAdvancedStabilization(enabled: Boolean) { context.dataStore.edit { it[ADVANCED_STABILIZATION] = enabled } }
 
     // Multi-Provider IA
     suspend fun setPrimaryAiProvider(providerId: String) {

@@ -25,8 +25,10 @@ fun NavGraph(
         
         composable("main") {
             MainScreen(
-                onNavigateToEditor = { navController.navigate("editor") },
-                onNavigateToSettings = { navController.navigate("settings") }
+                viewModel = viewModel,
+                onNavigateToCamera = { navController.navigate("camera") },
+                onNavigateToSettings = { navController.navigate("settings") },
+                onNavigateToHistory = { navController.navigate("history") }
             )
         }
         
@@ -35,7 +37,11 @@ fun NavGraph(
         }
 
         composable("settings") {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                settingsManager = com.studiocar.studio.utils.SettingsManager(androidx.compose.ui.platform.LocalContext.current),
+                onNavigateToAbout = { navController.navigate("about") }
+            )
         }
 
         composable("test") {
@@ -44,8 +50,17 @@ fun NavGraph(
         
         composable("editor") {
             EditorScreen(
+                viewModel = viewModel,
                 onBack = { navController.popBackStack() },
-                viewModel = viewModel
+                onNavigateToHistory = { navController.navigate("history") }
+            )
+        }
+
+        composable("history") {
+            HistoryScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onNavigateToTour = { /* navController.navigate("tour") */ }
             )
         }
     }
