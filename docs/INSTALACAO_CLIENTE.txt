@@ -1,0 +1,9 @@
+Como instalar o T-Line Studio:
+
+1. Copie o arquivo TLineStudio_v1.0.0.apk para o celular
+2. Abra o arquivo e permita instalacao de fontes desconhecidas
+3. Abra o app
+4. Va em Configuracoes e cole sua chave do OpenRouter (crie uma conta gratuita em openrouter.ai)
+5. Pronto! Agora e so tirar fotos dos carros.
+
+Qualquer duvida, me chame no WhatsApp.

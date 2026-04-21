@@ -1,0 +1,13 @@
+*** IMPORTANTE: CONFIGURACAO DA INTELIGENCIA ARTIFICIAL ***
+---------------------------------------------------------
+
+O T-Line Studio Pro utiliza os modelos de IA mais poderosos do mundo (Gemini 3 Pro e FLUX Ultra) via OpenRouter.
+
+Para o aplicativo funcionar, voce DEVE:
+1. Ter uma chave de API valida do site 'openrouter.ai'.
+2. Garantir que sua conta no OpenRouter tenha creditos ativos.
+3. Inserir esta chave na tela de Configuracoes do Aplicativo.
+
+Sem esta chave, o aplicativo mostrara apenas a captura da camera e nao conseguira realizar as edicoes inteligentes de estúdio e 4K.
+
+Duvidas sobre a chave de API? Consulte seu TI ou o fornecedor do software.

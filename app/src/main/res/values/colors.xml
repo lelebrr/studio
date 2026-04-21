@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cores do tema T-Line Studio -->
+    <color name="tline_primary">#FF6200EE</color>
+    <color name="tline_secondary">#FF03DAC5</color>
+</resources>

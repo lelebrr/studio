@@ -1,0 +1,11 @@
+INSTRUCOES PARA INSTALACAO - T-LINE CAR STUDIO PRO v1.0.0
+---------------------------------------------------------
+
+1. Transfira o arquivo 'TLineStudio_v1.0.0.apk' para o seu celular Android.
+2. No celular, abra o arquivo e permita a instalacao de 'Fontes Desconhecidas' se solicitado.
+3. Apos instalar, abra o aplicativo 'T-Line Studio Pro'.
+4. Va no icone de engrenagem (Configuracoes) e cole sua Chave de API do OpenRouter.
+5. Toque em 'TESTAR CONEXAO' para confirmar que o sistema de IA esta ativo.
+6. Pronto! Agora voce pode tirar fotos e edita-las com qualidade de estúdio 4K.
+
+Nota: O app funciona direto no celular e nao precisa de conta na Play Store.

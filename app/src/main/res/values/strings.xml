@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">T-Line Car Studio Pro</string>
+    
+    <!-- Onboarding / Welcome Screens -->
+    <string name="onboarding_title_1">Fotografia de Elite</string>
+    <string name="onboarding_desc_1">Capture fotos dos carros direto no pátio com guias de enquadramento profissionais.</string>
+    
+    <string name="onboarding_title_2">Remoção Digital</string>
+    <string name="onboarding_desc_2">Remova o fundo automaticamente e elimine distrações do cenário real em segundos.</string>
+    
+    <string name="onboarding_title_3">Showroom IA 4K</string>
+    <string name="onboarding_desc_3">Coloque showrooms virtuais de luxo com vidros transparentes e reflexos perfeitos.</string>
+    
+    <string name="onboarding_title_4">Venda Mais Rápido</string>
+    <string name="onboarding_desc_4">Salve em 4K, gere legendas automáticas e envie para seus clientes via WhatsApp.</string>
+    
+    <string name="onboarding_button_next">PRÓXIMO</string>
+    <string name="onboarding_button_start">COMEÇAR AGORA</string>
+
+    <!-- Splash Screen -->
+    <string name="splash_slogan">Estúdio Fotográfico Profissional para Carros</string>
+
+    <!-- Commercial Flow -->
+    <string name="btn_share_whatsapp">ENVIAR POR WHATSAPP</string>
+    <string name="share_title">Compartilhar Oferta</string>
+
+    <!-- Editor -->
+    <string name="editor_save_success">Imagem salva em 4K na Pasta Vendas!</string>
+    <string name="editor_save_error">Falha ao salvar. Verifique permissões.</string>
+    
+    <!-- Info -->
+    <string name="app_description_short">O estúdio fotográfico de carros definitivo para sua concessionária.</string>
+    <string name="app_description_long">T-Line Studio: Transforme seu pátio em um estúdio 4K. \n\nRecursos: \n- Remoção de fundo automática. \n- Showrooms virtuais realistas. \n- Geração de legendas IA para vendas. \n- Integração direta com WhatsApp.</string>
+</resources>
