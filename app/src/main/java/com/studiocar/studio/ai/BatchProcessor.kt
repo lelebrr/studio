@@ -49,23 +49,17 @@ object BatchProcessor {
             _isBusy.value = true
             val service = ImageEditorService(context)
             
-            while (queue.isNotEmpty()) {
-                val task = queue.poll()
+            while (true) {
+                val task = queue.poll() ?: break
                 _remainingTasks.value = queue.size
                 
-                if (task != null) {
-                    try {
-                        Timber.i("Processando tarefa em lote...")
-                        val result = service.processCarPhoto(task.bitmap, task.options)
-                        if (result != null) {
-                            task.onComplete(result)
-                        } else {
-                            task.onError(Exception("Falha no processamento IA"))
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Erro no processamento em lote")
-                        task.onError(e)
-                    }
+                try {
+                    Timber.i("Processando tarefa em lote...")
+                    val result = service.processCarPhoto(task.bitmap, task.options)
+                    task.onComplete(result)
+                } catch (e: Exception) {
+                    Timber.e(e, "Erro no processamento em lote")
+                    task.onError(e)
                 }
             }
             

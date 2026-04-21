@@ -19,6 +19,10 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.UUID
+import androidx.core.graphics.scale
+
+enum class ImageQualityStatus { ACCEPTABLE, LOW_RESOLUTION, BLURRY, TOO_DARK }
+data class ImageQualityResult(val status: ImageQualityStatus, val isAcceptable: Boolean)
 
 /**
  * EditorViewModel V11.0 - StudioCar Elite Professional.
@@ -80,6 +84,9 @@ class EditorViewModel : ViewModel() {
 
     private val _isScanningVin = MutableStateFlow(false)
     val isScanningVin = _isScanningVin.asStateFlow()
+
+    private val _isImageLoading = MutableStateFlow(false)
+    val isImageLoading = _isImageLoading.asStateFlow()
 
     private val _scannedVin = MutableStateFlow<String?>(null)
     val scannedVin = _scannedVin.asStateFlow()
@@ -156,6 +163,127 @@ class EditorViewModel : ViewModel() {
         _resultBitmap.value = null
         _generatedCaption.value = null
         _processingStage.value = ProcessingStage.IDLE
+    }
+
+    fun pickImageFromGallery(
+        context: Context, 
+        uri: Uri, 
+        onQualityWarning: (ImageQualityResult, () -> Unit) -> Unit,
+        onSuccess: () -> Unit
+    ) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            _isImageLoading.value = true
+            try {
+                val bitmap = ImageSaveHelper.getBitmapFromUri(context, uri)
+                if (bitmap != null) {
+                    val qualityResult = validateImageQuality(bitmap)
+                    
+                    val proceedWithImage = {
+                        val maxDim = 3072
+                        val finalBitmap = if (bitmap.width > maxDim || bitmap.height > maxDim) {
+                            val ratio = bitmap.width.toFloat() / bitmap.height.toFloat()
+                            val nw = if (ratio > 1) maxDim else (maxDim * ratio).toInt()
+                            val nh = if (ratio > 1) (maxDim / ratio).toInt() else maxDim
+                            bitmap.scale(nw, nh, true)
+                        } else {
+                            bitmap
+                        }
+                        
+                        // Execute success logic in Main thread
+                        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                            if (_options.value.batchMode) {
+                                addToBatch(finalBitmap)
+                            } else {
+                                setOriginalImage(finalBitmap)
+                                onSuccess()
+                            }
+                        }
+                    }
+                    
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        _isImageLoading.value = false // Hide loading before showing dialog
+                        if (!qualityResult.isAcceptable) {
+                            onQualityWarning(qualityResult) { proceedWithImage() }
+                        } else {
+                            proceedWithImage()
+                        }
+                    }
+                } else {
+                    _isImageLoading.value = false
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Erro ao carregar imagem da galeria")
+                _isImageLoading.value = false
+            }
+        }
+    }
+
+    private fun validateImageQuality(bitmap: Bitmap): ImageQualityResult {
+        if (bitmap.width * bitmap.height < 600000) { // e.g. < ~800x600
+            return ImageQualityResult(ImageQualityStatus.LOW_RESOLUTION, false)
+        }
+        
+        val maxAnalysisDim = 800
+        val analysisBitmap = if (bitmap.width > maxAnalysisDim || bitmap.height > maxAnalysisDim) {
+            val ratio = bitmap.width.toFloat() / bitmap.height.toFloat()
+            val nw = if (ratio > 1) maxAnalysisDim else (maxAnalysisDim * ratio).toInt()
+            val nh = if (ratio > 1) (maxAnalysisDim / ratio).toInt() else maxAnalysisDim
+            bitmap.scale(nw, nh, true)
+        } else bitmap
+
+        val width = analysisBitmap.width
+        val height = analysisBitmap.height
+        val pixels = IntArray(width * height)
+        analysisBitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+
+        var sumLuma = 0L
+        val grayScale = IntArray(width * height)
+        for (i in pixels.indices) {
+            val color = pixels[i]
+            val r = (color shr 16) and 0xFF
+            val g = (color shr 8) and 0xFF
+            val b = color and 0xFF
+            val luma = (0.299 * r + 0.587 * g + 0.114 * b).toInt()
+            grayScale[i] = luma
+            sumLuma += luma
+        }
+
+        val avgLuma = sumLuma / pixels.size
+        if (avgLuma < 30) {
+            if (analysisBitmap != bitmap) analysisBitmap.recycle()
+            return ImageQualityResult(ImageQualityStatus.TOO_DARK, false)
+        }
+
+        var laplacianSum = 0.0
+        var laplacianSqSum = 0.0
+        var count = 0
+
+        for (y in 1 until height - 1) {
+            for (x in 1 until width - 1) {
+                val i = y * width + x
+                val center = grayScale[i]
+                val left = grayScale[i - 1]
+                val right = grayScale[i + 1]
+                val up = grayScale[i - width]
+                val down = grayScale[i + width]
+
+                val laplacian = (4 * center - left - right - up - down).toDouble()
+                laplacianSum += laplacian
+                laplacianSqSum += laplacian * laplacian
+                count++
+            }
+        }
+
+        val meanLaplacian = laplacianSum / count
+        val varianceLaplacian = (laplacianSqSum / count) - (meanLaplacian * meanLaplacian)
+
+        if (analysisBitmap != bitmap) analysisBitmap.recycle()
+
+        if (varianceLaplacian < 40) {
+            return ImageQualityResult(ImageQualityStatus.BLURRY, false)
+        }
+
+        return ImageQualityResult(ImageQualityStatus.ACCEPTABLE, true)
     }
 
     fun addToBatch(bitmap: Bitmap) {
@@ -343,22 +471,18 @@ class EditorViewModel : ViewModel() {
                 
                 _currentProviderName.value = getAiProviderManager(context).getPrimaryProvider().name
                 val result = currentService.processCarPhoto(original, _options.value, points)
-                if (result != null) {
-                    _resultBitmap.value = result
-                    _processingStage.value = ProcessingStage.DONE
-                    
-                    // Auto-caption for Elite mode
-                    if (_options.value.isDealershipMode) {
-                        _generatedCaption.value = currentService.generateCaption(_carMetadata.value, _options.value)
-                    }
-
-                    // --- NOVO: Auto Enhance Automático ---
-                    autoEnhance()
-                    
-                    saveToHistory(context, original, _adjustedBitmap.value ?: result)
-                } else {
-                    _processingStage.value = ProcessingStage.IDLE
+                _resultBitmap.value = result
+                _processingStage.value = ProcessingStage.DONE
+                
+                // Auto-caption for Elite mode
+                if (_options.value.isDealershipMode) {
+                    _generatedCaption.value = currentService.generateCaption(_carMetadata.value, _options.value)
                 }
+
+                // --- NOVO: Auto Enhance Automático ---
+                autoEnhance()
+                
+                saveToHistory(context, original, _adjustedBitmap.value ?: result)
             } catch (e: Exception) {
                 _processingStage.value = ProcessingStage.IDLE
             }
@@ -378,9 +502,7 @@ class EditorViewModel : ViewModel() {
             images.forEachIndexed { index, bitmap ->
                 _batchProgress.value = (index + 1) to images.size
                 val result = currentService.processCarPhoto(bitmap, _options.value.copy(batchMode = true))
-                if (result != null) {
-                    saveToHistory(context, bitmap, result, batchId = batchId)
-                }
+                saveToHistory(context, bitmap, result, batchId = batchId)
             }
             _processingStage.value = ProcessingStage.DONE
         }

@@ -1,7 +1,6 @@
-package com.studio.tline
+package com.studiocar.studio
 
 import org.junit.Test
-
 import org.junit.Assert.*
 
 /**
@@ -10,6 +9,8 @@ import org.junit.Assert.*
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
-    // Test removed as it was unused
-
+    @Test
+    fun addition_isCorrect() {
+        assertEquals(4, 2 + 2)
+    }
 }

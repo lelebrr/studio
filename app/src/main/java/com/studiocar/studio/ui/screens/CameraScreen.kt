@@ -1,6 +1,9 @@
+@file:OptIn(ExperimentalCamera2Interop::class, ExperimentalGetImage::class)
+
 package com.studiocar.studio.ui.screens
 
 import android.graphics.Bitmap
+import android.annotation.SuppressLint
 import android.util.Size
 import androidx.camera.core.*
 import androidx.camera.extensions.ExtensionMode
@@ -44,6 +47,10 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -80,12 +87,13 @@ import android.hardware.SensorManager
 import com.studiocar.studio.ai.VehicleTypeDetector
 import com.studiocar.studio.utils.VehicleSilhouetteManager
 import kotlin.math.abs
+import kotlin.math.roundToInt
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
+import androidx.camera.core.ExperimentalGetImage
+import androidx.compose.ui.unit.IntOffset
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    androidx.camera.camera2.interop.ExperimentalCamera2Interop::class,
-    androidx.camera.core.ExperimentalGetImage::class
-)
+@SuppressLint("UnsafeOptInUsageError")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraScreen(
     viewModel: EditorViewModel = viewModel(),
@@ -102,6 +110,26 @@ fun CameraScreen(
     val scannedVin by viewModel.scannedVin.collectAsState()
     val vinInfo by viewModel.vinInfo.collectAsState()
     val batchImages by viewModel.batchImages.collectAsState()
+    val isImageLoading by viewModel.isImageLoading.collectAsState()
+    var pendingGalleryProceed by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                viewModel.pickImageFromGallery(
+                    context = context, 
+                    uri = uri,
+                    onQualityWarning = { _, proceed ->
+                        pendingGalleryProceed = proceed
+                    },
+                    onSuccess = {
+                        onNavigateToEditor()
+                    }
+                )
+            }
+        }
+    )
     
     var flashMode by remember { mutableIntStateOf(ImageCapture.FLASH_MODE_OFF) }
     var zoomLevel by remember { mutableFloatStateOf(1f) }
@@ -175,7 +203,7 @@ fun CameraScreen(
                         val z = event.values[2]
 
                         val speed = abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000
-                        viewModel.updateCameraStability(speed < 150) // Threshold for stability
+                        viewModel.updateCameraStability(speed < 150.0) // Threshold for stability
                         
                         lastX = x
                         lastY = y
@@ -523,13 +551,13 @@ fun CameraScreen(
         if (focusVisibility && focusPoint != null) {
             Box(
                 modifier = Modifier
-                    .offset(x = focusPoint!!.x.toComposeDp() - 30.dp, y = focusPoint!!.y.toComposeDp() - 30.dp)
+                    .offset { IntOffset((focusPoint!!.x.toComposeDp().toPx()).roundToInt() - 30.dp.toPx().roundToInt(), (focusPoint!!.y.toComposeDp().toPx()).roundToInt() - 30.dp.toPx().roundToInt()) }
                     .size(60.dp)
                     .border(1.dp, Color.Cyan, CircleShape)
             )
             Box(
                 modifier = Modifier
-                    .offset(x = focusPoint!!.x.toComposeDp() - 2.dp, y = focusPoint!!.y.toComposeDp() - 2.dp)
+                    .offset { IntOffset((focusPoint!!.x.toComposeDp().toPx()).roundToInt() - 2.dp.toPx().roundToInt(), (focusPoint!!.y.toComposeDp().toPx()).roundToInt() - 2.dp.toPx().roundToInt()) }
                     .size(4.dp)
                     .background(Color.Cyan, CircleShape)
             )
@@ -582,9 +610,26 @@ fun CameraScreen(
                         })
                     }
                 },
+                onPickGallery = {
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
                 onFinishBatch = onNavigateToBatchEditor,
                 captureBlocked = isLandscapeRecommended && currentOrientation == Configuration.ORIENTATION_PORTRAIT && !userIgnoredOrientationWarning
             )
+        }
+
+        // Loading Overlay
+        if (isImageLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.7f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = StudioCyan)
+            }
         }
 
         // Overlays de Orientação
@@ -596,6 +641,38 @@ fun CameraScreen(
 
         if (showSuccessToast) {
             OrientationSuccessToast()
+        }
+
+        if (pendingGalleryProceed != null) {
+            AlertDialog(
+                onDismissRequest = { pendingGalleryProceed = null },
+                title = { Text("Qualidade da Imagem", color = Color.White, fontWeight = FontWeight.Bold) },
+                text = { 
+                    Text(
+                        "Temos detectado que esta imagem tem baixa qualidade ou resolução.\nIsso pode gerar um resultado ruim na edição.\n\nDeseja continuar mesmo assim ou escolher outra imagem?",
+                        color = Color.White
+                    ) 
+                },
+                confirmButton = {
+                    TextButton(onClick = { 
+                        val proceed = pendingGalleryProceed
+                        pendingGalleryProceed = null
+                        proceed?.invoke() 
+                    }) {
+                        Text("Continuar mesmo assim", color = StudioCyan)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { 
+                        pendingGalleryProceed = null
+                        photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }) {
+                        Text("Escolher outra imagem", color = Color.White)
+                    }
+                },
+                containerColor = Color.DarkGray,
+                shape = RoundedCornerShape(16.dp)
+            )
         }
     }
 
@@ -671,6 +748,7 @@ private fun CameraBottomBar(
     options: com.studiocar.studio.data.models.EditOptions,
     batchCount: Int,
     onCapture: () -> Unit,
+    onPickGallery: () -> Unit,
     onFinishBatch: () -> Unit,
     captureBlocked: Boolean = false
 ) {
@@ -701,35 +779,54 @@ private fun CameraBottomBar(
         }
 
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            // Capture Button com Animação Professional
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .graphicsLayer {
-                        scaleX = buttonScale
-                        scaleY = buttonScale
-                    }
-                    .clip(CircleShape)
-                    .border(4.dp, Color.White, CircleShape)
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null,
-                        onClick = { if (!captureBlocked) onCapture() }
-                    )
-                    .then(if (captureBlocked) Modifier.graphicsLayer { alpha = 0.5f } else Modifier),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
+                // Gallery Button
+                Button(
+                    onClick = onPickGallery,
+                    modifier = Modifier.weight(1f).height(72.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.DarkGray.copy(alpha = 0.8f)
+                    )
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = Color.White)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Escolher da\nGaleria", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.Center, lineHeight = 14.sp)
+                    }
+                }
+
+                // Capture Button
+                Button(
+                    onClick = { if (!captureBlocked) onCapture() },
                     modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(if (options.isDealershipMode) StudioCyan else Color.White)
-                        .then(if (isPressed) Modifier.background(Color.Gray.copy(alpha = 0.5f)) else Modifier)
-                )
+                        .weight(1f)
+                        .height(72.dp)
+                        .graphicsLayer {
+                            scaleX = buttonScale
+                            scaleY = buttonScale
+                            alpha = if (captureBlocked) 0.5f else 1f
+                        },
+                    interactionSource = interactionSource,
+                    shape = RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (options.isDealershipMode) StudioCyan else Color.White
+                    )
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.Black)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Tirar\nFoto", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.Center, lineHeight = 14.sp)
+                    }
+                }
             }
 
             // Finish Batch Button com Animação
-            Box(modifier = Modifier.align(Alignment.CenterEnd).padding(end = 32.dp)) {
+            Box(modifier = Modifier.align(Alignment.TopEnd).padding(end = 24.dp).offset(y = (-50).dp)) {
                 androidx.compose.animation.AnimatedVisibility(
                     visible = options.batchMode && batchCount > 0,
                     enter = scaleIn(animationSpec = StudioCarAnimations.NaturalSpring) + fadeIn(),

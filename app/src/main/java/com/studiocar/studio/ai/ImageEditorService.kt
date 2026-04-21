@@ -38,7 +38,7 @@ class ImageEditorService(private val context: Context) {
     ): List<Bitmap> = withContext(Dispatchers.Default) {
         images.mapIndexed { index, bitmap ->
             onProgress(index + 1, images.size)
-            processCarPhoto(bitmap, options) ?: bitmap
+            processCarPhoto(bitmap, options)
         }
     }
 
