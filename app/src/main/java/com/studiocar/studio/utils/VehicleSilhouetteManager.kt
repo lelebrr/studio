@@ -70,22 +70,44 @@ object VehicleSilhouetteManager {
      * TODO: Adicionar os drawables reais na pasta res/drawable/
      */
     private fun getSilhouetteResource(type: VehicleType, angle: PhotoAngle): Int? {
-        // Mapeando PhotoAngle (que tem vários ângulos) para a lógica de "FRENTE, LATERAL, TRASEIRA"
         val isFront = angle == PhotoAngle.FRONT_THREE_QUARTER || angle == PhotoAngle.FRONT || angle == PhotoAngle.ANGLE_45
         val isRear = angle == PhotoAngle.REAR_THREE_QUARTER || angle == PhotoAngle.REAR
         val isSide = angle == PhotoAngle.LEFT_SIDE || angle == PhotoAngle.RIGHT_SIDE
         
-        // Se não for um dos principais ângulos externos, não mostramos silhueta
         if (!isFront && !isRear && !isSide) return null
 
-        // Mapeamento usando o tipo de veículo e ângulo
-        // Nota: Atualmente todos retornam ic_launcher_background como placeholder
-        // até que os assets específicos (ex: silhouette_sedan_front) sejam adicionados.
         return when (type) {
-            VehicleType.HATCH, VehicleType.SEDAN, VehicleType.SUV, 
-            VehicleType.PICKUP, VehicleType.CROSSOVER, VehicleType.MINIVAN, 
-            VehicleType.STATION_WAGON, VehicleType.COUPE -> {
-                R.drawable.ic_launcher_background
+            VehicleType.SEDAN, VehicleType.COUPE -> {
+                when {
+                    isFront -> R.drawable.silhouette_sedan_front
+                    isSide -> R.drawable.silhouette_sedan_side
+                    isRear -> R.drawable.silhouette_sedan_rear
+                    else -> null
+                }
+            }
+            VehicleType.SUV, VehicleType.CROSSOVER, VehicleType.MINIVAN, VehicleType.STATION_WAGON -> {
+                when {
+                    isFront -> R.drawable.silhouette_suv_front
+                    isSide -> R.drawable.silhouette_suv_side
+                    isRear -> R.drawable.silhouette_sedan_rear // Fallback to sedan rear for now
+                    else -> null
+                }
+            }
+            VehicleType.PICKUP -> {
+                when {
+                    isFront -> R.drawable.silhouette_suv_front
+                    isSide -> R.drawable.silhouette_suv_side
+                    isRear -> R.drawable.silhouette_sedan_rear
+                    else -> null
+                }
+            }
+            VehicleType.HATCH -> {
+                when {
+                    isFront -> R.drawable.silhouette_sedan_front
+                    isSide -> R.drawable.silhouette_sedan_side
+                    isRear -> R.drawable.silhouette_sedan_rear
+                    else -> null
+                }
             }
         }
     }

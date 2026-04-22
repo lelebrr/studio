@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import com.studiocar.studio.ai.providers.ImageAIProvider
 import com.studiocar.studio.data.models.EditOptions
 import com.studiocar.studio.network.*
+import com.studiocar.studio.utils.BitmapExtensions
 import com.studiocar.studio.utils.BitmapExtensions.toBase64
 import com.studiocar.studio.utils.OpenRouterConfig
 import com.studiocar.studio.utils.SecurityUtils
@@ -45,10 +46,14 @@ class OpenRouterProvider(
             val response = NetworkModule.openRouterApi.getCompletion("Bearer $apiKey", request = request)
             val content = response.choices.firstOrNull()?.message?.content ?: return null
             
-            // Simulação de processamento de imagem (Base64 ou URL)
-            if (content.contains("http") || content.startsWith("data:image")) {
-                bitmap // Fallback seguro para o protótipo
-            } else null
+            if (content.startsWith("http")) {
+                BitmapExtensions.fromUrl(content)
+            } else if (content.startsWith("data:image") || content.length > 1000) {
+                BitmapExtensions.fromBase64(content)
+            } else {
+                Timber.w("OpenRouter retornou texto em vez de imagem: $content")
+                null
+            }
         } catch (e: Exception) {
             Timber.e(e, "OpenRouter Error")
             null

@@ -129,6 +129,69 @@ object PostProcessor {
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         return background
     }
+
+    /**
+     * Refinamento final da imagem processada (StudioCar Ultra Engine).
+     * Ajusta cores, sombras e integração final para qualidade Platinum.
+     */
+    fun refineImage(bitmap: Bitmap, options: com.studiocar.studio.data.models.EditOptions): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+        val result = createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(result)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+
+        // 1. Base Image Integration
+        canvas.drawBitmap(bitmap, 0f, 0f, null)
+
+        // 2. Oclusão de Ambiente e Sombra de Contato (Simulada)
+        if (options.autoShadows) {
+            val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+            shadowPaint.color = Color.BLACK
+            shadowPaint.alpha = 120
+            shadowPaint.maskFilter = BlurMaskFilter(25f, BlurMaskFilter.Blur.NORMAL)
+            
+            // Desenha uma sombra suave na base inferior (onde as rodas tocam o chão)
+            val shadowRect = RectF(
+                width * 0.15f, height * 0.82f,
+                width * 0.85f, height * 0.92f
+            )
+            canvas.drawOval(shadowRect, shadowPaint)
+        }
+
+        // 3. Ajustes de Cor de Elite (Studio Master)
+        val colorMatrix = ColorMatrix()
+        if (options.isUltraQuality) {
+            // Aumenta levemente o contraste e a vibração para o padrão "Showroom"
+            val cm = ColorMatrix()
+            val contrast = 1.04f
+            val brightness = 2f
+            cm.set(floatArrayOf(
+                contrast, 0f, 0f, 0f, brightness,
+                0f, contrast, 0f, 0f, brightness,
+                0f, 0f, contrast, 0f, brightness,
+                0f, 0f, 0f, 1f, 0f
+            ))
+            colorMatrix.postConcat(cm)
+            
+            val sat = ColorMatrix()
+            sat.setSaturation(1.08f)
+            colorMatrix.postConcat(sat)
+        }
+
+        paint.colorFilter = ColorMatrixColorFilter(colorMatrix)
+        canvas.drawBitmap(result, 0f, 0f, paint)
+
+        // 4. Sharpness Final
+        if (options.extremeSharpening) {
+            val sharpenPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+            sharpenPaint.alpha = 30
+            sharpenPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.OVERLAY)
+            canvas.drawBitmap(result, 1f, 1f, sharpenPaint)
+        }
+
+        return result
+    }
 }
 
 

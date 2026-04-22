@@ -72,30 +72,46 @@ class AIProviderManager(private val context: Context) {
         val primary = getPrimaryProvider()
         
         // Tenta o principal primeiro
-        Timber.i("Tentando processar com provedor principal: ${primary.name}")
-        val result = runCatching { primary.editCarImage(bitmap, mask, prompt, options) }.getOrNull()
+        Timber.i("AIProviderManager: Tentando provedor principal [${primary.name}]")
+        val result = try {
+            primary.editCarImage(bitmap, mask, prompt, options)
+        } catch (e: Exception) {
+            Timber.e(e, "Falha no provedor principal ${primary.name}")
+            null
+        }
         
         if (result != null) return result
         
         // Se falhar e fallback estiver ativo, tenta os próximos na ordem de preferência
         if (useAutoFallback) {
-            val fallbackOrder = settingsManager.aiFallbackOrder.first().toList()
+            val fallbackOrder = settingsManager.aiFallbackOrder.first()
+            Timber.w("AIProviderManager: Provedor principal falhou. Iniciando sequência de fallback: $fallbackOrder")
+            
             for (providerId in fallbackOrder) {
                 if (providerId == primary.id) continue
                 
                 val provider = providers[providerId] ?: continue
-                if (!provider.isAvailable) continue
+                if (!provider.isAvailable) {
+                    Timber.d("AIProviderManager: Fallback [${provider.name}] ignorado (API Key ausente)")
+                    continue
+                }
 
-                Timber.w("Provedor ${primary.name} falhou. Tentando fallback: ${provider.name}")
-                val fallbackResult = runCatching { provider.editCarImage(bitmap, mask, prompt, options) }.getOrNull()
+                Timber.i("AIProviderManager: Tentando fallback [${provider.name}]...")
+                val fallbackResult = try {
+                    provider.editCarImage(bitmap, mask, prompt, options)
+                } catch (e: Exception) {
+                    Timber.e(e, "Falha no fallback ${provider.name}")
+                    null
+                }
+                
                 if (fallbackResult != null) {
-                    Timber.i("Fallback bem sucedido com ${provider.name}")
+                    Timber.i("AIProviderManager: Fallback bem sucedido com ${provider.name}")
                     return fallbackResult
                 }
             }
         }
 
-        Timber.e("Todos os provedores de IA falharam.")
+        Timber.e("AIProviderManager: Todos os provedores de IA falharam ou não retornaram imagem.")
         return null
     }
 

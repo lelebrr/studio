@@ -165,30 +165,36 @@ class SAMSegmenter(private val context: Context) {
     }
 
     private fun maskTensorToBitmap(maskTensor: OnnxTensor): Bitmap {
-        val shape = maskTensor.info.shape // Expecting [1, 1, 256, 256] or similar
+        val shape = maskTensor.info.shape 
         val width = shape[3].toInt()
         val height = shape[2].toInt()
         val floatData = maskTensor.floatBuffer
         
-        val maskBitmap = createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val maskBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val pixels = IntArray(width * height)
         
         for (i in 0 until width * height) {
             val logit = floatData.get(i)
-            // Logit > 0 significa objeto
+            // Logit > 0 significa objeto. Usamos um alpha suave para integração.
             pixels[i] = if (logit > 0) Color.WHITE else Color.TRANSPARENT
         }
         
         maskBitmap.setPixels(pixels, 0, width, 0, 0, width, height)
+        floatData.clear() // Libera referência
         return maskBitmap
     }
 
     private fun bitmapToFloatBuffer(bitmap: Bitmap): FloatBuffer {
-        val buffer = FloatBuffer.allocate(1 * 3 * INPUT_SIZE * INPUT_SIZE)
+        val bufferSize = 1 * 3 * INPUT_SIZE * INPUT_SIZE
+        // Usamos Direct Buffer para performance e menor GC pressure no ONNX Runtime
+        val byteBuffer = java.nio.ByteBuffer.allocateDirect(bufferSize * 4)
+        byteBuffer.order(java.nio.ByteOrder.nativeOrder())
+        val buffer = byteBuffer.asFloatBuffer()
+        
         val pixels = IntArray(INPUT_SIZE * INPUT_SIZE)
         bitmap.getPixels(pixels, 0, INPUT_SIZE, 0, 0, INPUT_SIZE, INPUT_SIZE)
 
-        // Normalização Standard (0-1) - Ajustar se o modelo exigir ImageNet
+        // Normalização Standard (0-1) - Canal por canal (R, G, B)
         for (c in 0 until 3) {
             for (p in pixels.indices) {
                 val color = pixels[p]

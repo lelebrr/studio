@@ -53,6 +53,11 @@ class ImageEditorService(private val context: Context) {
         points: List<Pair<android.graphics.PointF, Boolean>>? = null
     ): Bitmap = withContext(Dispatchers.Default) {
         val totalStartTime = System.currentTimeMillis()
+        var input: Bitmap? = null
+        var mask: Bitmap? = null
+        var geminiResult: Bitmap? = null
+        var finalResult: Bitmap? = null
+        
         try {
             val isDemo = settingsManager.isDemoMode.first()
             val isOffline = settingsManager.isOfflineMode.first()
@@ -61,14 +66,12 @@ class ImageEditorService(private val context: Context) {
             val useSam2Ultra = options.isSam2UltraEnabled 
 
             // 1. SEGMENTAÇÃO INICIAL E REFINAMENTO SAM 2
-            // QUALIDADE MÁXIMA - Recorte perfeito e cirúrgico
-            val input = original.scaleToMax(options.maxResolution)
+            input = original.scaleToMax(options.maxResolution)
             
-            var (mask, glassMask) = if (useSam2Ultra) {
-                Timber.i("MODO SAM 2 ULTRA ATIVADO - Iniciando pipeline de segmentação cirúrgica")
-                val initialMask = segmenter.segmentVehicle(input)
+            val (segMask, _) = if (useSam2Ultra) {
+                Timber.i("MODO SAM 2 ULTRA ATIVADO")
+                val initialMask = segmenter.segmentVehicle(input!!)
                 val box = initialMask?.extractBoundingBox()
-                
                 val boxArray = if (box != null) floatArrayOf(box.left, box.top, box.right, box.bottom) else null
                 
                 val samPoints = points?.map { (point, isPositive) ->
@@ -77,21 +80,26 @@ class ImageEditorService(private val context: Context) {
                     floatArrayOf(x, y) to intArrayOf(if (isPositive) 1 else 0)
                 }
 
-                val refinedSamMask = samSegmenter.segment(input, points = samPoints, box = boxArray)
-                (refinedSamMask ?: initialMask) to null
+                val refinedSamMask = samSegmenter.segment(input!!, points = samPoints, box = boxArray)
+                val finalMask = (refinedSamMask ?: initialMask)
+                if (initialMask != finalMask) initialMask?.recycle()
+                finalMask to null
             } else if (options.isUltraQuality) {
-                advancedSegmenter.segmentUltra(input)
+                advancedSegmenter.segmentUltra(input!!)
             } else {
-                (segmenter.segmentVehicle(input) to null)
+                (segmenter.segmentVehicle(input!!) to null)
             }
+            mask = segMask
             
             // 2. MODO OFFLINE / DEMO
             if (isOffline || isDemo || !primaryProvider.isAvailable) {
-                return@withContext PostProcessor.refineImage(input, options)
+                return@withContext PostProcessor.refineImage(input!!, options).also {
+                    input?.recycle()
+                    mask?.recycle()
+                }
             }
 
-            // 3. ESTÁGIO IA 1: GEMINI P/ ESTRUTURA E REFRAÇÃO DE VIDROS
-            // QUALIDADE MÁXIMA - Vidros com transparência e refração real
+            // 3. ESTÁGIO IA 1: GEMINI P/ ESTRUTURA E REFRAÇÃO
             val usePro = settingsManager.useProModels.first()
             val sceneDescription = options.selectedStudioScene?.name ?: options.background.description
             val floorDescription = options.selectedStudioScene?.name ?: options.floor.description
@@ -104,37 +112,49 @@ class ImageEditorService(private val context: Context) {
                 OpenRouterConfig.getEliteGlassPrompt(sceneDescription)
             }
             
-            val geminiResult = aiProviderManager.editImageWithFallback(
-                bitmap = input,
+            geminiResult = aiProviderManager.editImageWithFallback(
+                bitmap = input!!,
                 mask = mask,
                 prompt = promptGemini,
                 options = options.copy(aiModelId = if (usePro) OpenRouterConfig.MODEL_GEMINI_3_PRO else OpenRouterConfig.MODEL_GEMINI_31_FLASH)
-            ) ?: input
+            )
 
-            // 4. ESTÁGIO IA 2: FLUX P/ POLIMENTO E REFLEXOS REALISTAS
-            // QUALIDADE MÁXIMA - Reflexos metálicos e integração perfeita com o cenário
+            // 4. ESTÁGIO IA 2: FLUX P/ POLIMENTO E REFLEXOS
             val fluxModel = if (usePro) OpenRouterConfig.MODEL_FLUX_11_PRO_ULTRA else OpenRouterConfig.MODEL_FLUX_2_PRO
             val fluxPrompt = if (useSam2Ultra) {
                 OpenRouterConfig.getFluxUltraPolishingPrompt(sceneDescription, floorDescription)
             } else if (options.nightMode) {
                 OpenRouterConfig.getNightModePrompt("Original", "Vehicle")
             } else {
-                OpenRouterConfig.getElite2026BasePrompt(
+                val base = OpenRouterConfig.getElite2026BasePrompt(
                     "High Gloss", "Premium Car", sceneDescription, floorDescription
                 )
+                if (options.isPhotographic) "$base Photographic style, real lenses." else base
             }
 
-            val finalResult = aiProviderManager.editImageWithFallback(
-                bitmap = geminiResult,
+            finalResult = aiProviderManager.editImageWithFallback(
+                bitmap = geminiResult ?: input!!,
                 mask = mask,
-                prompt = fluxPrompt,
+                prompt = if (options.removeReflections) "$fluxPrompt Remove all existing distracting reflections." else fluxPrompt,
                 options = options.copy(aiModelId = fluxModel)
-            ) ?: geminiResult
+            )
 
-            // 5. PÓS-PROCESSAMENTO LOCAL PESADO (#10, #15, #SAM2)
-            // QUALIDADE MÁXIMA - Sombras de contato e match final de cor
+            // 5. PÓS-PROCESSAMENTO LOCAL PESADO
+            val finalOptions = options.copy(
+                isSam2UltraEnabled = useSam2Ultra,
+                isUltraQuality = options.isUltraQuality || useSam2Ultra // Se SAM 2, força Ultra
+            )
+            val output = PostProcessor.refineImage(finalResult ?: geminiResult ?: input!!, finalOptions)
+            
             Timber.i("Pipeline StudioCar Ultra finalizada em ${System.currentTimeMillis() - totalStartTime}ms")
-            PostProcessor.refineImage(finalResult, options.copy(isSam2UltraEnabled = useSam2Ultra))
+            
+            // Cleanup
+            if (input != original) input?.recycle()
+            mask?.recycle()
+            geminiResult?.recycle()
+            finalResult?.recycle()
+            
+            output
         } catch (e: Exception) {
             Timber.e(e, "Falha crítica no processamento StudioCar")
             original

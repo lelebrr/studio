@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="150dp"
+    android:viewportWidth="200"
+    android:viewportHeight="150">
+    <!-- Body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,100 L45,65 L155,65 L170,100 L165,115 L35,115 Z" />
+    <!-- Rear Window -->
+    <path
+        android:fillColor="#000000"
+        android:fillAlpha="0.3"
+        android:pathData="M55,68 L145,68 L140,85 L60,85 Z" />
+    <!-- Tail lights -->
+    <path
+        android:fillColor="#FF0000"
+        android:fillAlpha="0.5"
+        android:pathData="M35,85 L55,85 L55,95 L35,95 Z" />
+    <path
+        android:fillColor="#FF0000"
+        android:fillAlpha="0.5"
+        android:pathData="M145,85 L165,85 L165,95 L145,95 Z" />
+    <!-- Wheels -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M40,115 L60,115 L60,125 L40,125 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M140,115 L160,115 L160,125 L140,125 Z" />
+</vector>

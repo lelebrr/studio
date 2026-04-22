@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import com.studiocar.studio.ai.providers.ImageAIProvider
 import com.studiocar.studio.data.models.EditOptions
 import com.studiocar.studio.utils.SecurityUtils
+import com.studiocar.studio.utils.BitmapExtensions.toMultipartBody
+import com.studiocar.studio.network.NetworkModule
 import timber.log.Timber
 
 class StabilityAIProvider(
@@ -23,19 +25,35 @@ class StabilityAIProvider(
         prompt: String,
         options: EditOptions
     ): Bitmap? {
-        securityUtils.getApiKey(id) ?: return null
+        val apiKey = securityUtils.getApiKey(id) ?: return null
+        val actualMask = mask ?: return null // Stability inpaint requer máscara
+        
         return try {
-            Timber.i("Stability AI: Gerando inpainting com SD3...")
-            // Implementação via endpoint Stability.ai
-            bitmap
+            Timber.i("Stability AI: Iniciando inpainting...")
+            
+            val imagePart = bitmap.toMultipartBody("image")
+            val maskPart = actualMask.toMultipartBody("mask")
+            val promptBody = okhttp3.RequestBody.create(okhttp3.MultipartBody.FORM, prompt)
+            val outputFormat = okhttp3.RequestBody.create(okhttp3.MultipartBody.FORM, "png")
+
+            val responseBody = NetworkModule.stabilityApi.inpaint(
+                auth = "Bearer $apiKey",
+                image = imagePart,
+                mask = maskPart,
+                prompt = promptBody,
+                outputFormat = outputFormat
+            )
+
+            val bytes = responseBody.bytes()
+            android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
         } catch (e: Exception) {
-            Timber.e(e, "Stability Error")
+            Timber.e(e, "Stability AI Error")
             null
         }
     }
 
     override suspend fun generateCaption(prompt: String): String {
-        return "Foto profissional editada via Stability AI."
+        return "Processado via Stability AI Inpainting."
     }
 
     override suspend fun testConnection(apiKey: String): Boolean {

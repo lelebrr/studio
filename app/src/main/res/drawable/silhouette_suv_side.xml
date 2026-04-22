@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="150dp"
+    android:viewportWidth="200"
+    android:viewportHeight="150">
+    <!-- Body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,110 L20,80 L55,80 L75,40 L160,40 L180,80 L195,80 L190,110 L10,110 Z" />
+    <!-- Windows -->
+    <path
+        android:fillColor="#000000"
+        android:fillAlpha="0.3"
+        android:pathData="M80,45 L155,45 L170,80 L80,80 Z" />
+    <!-- Wheels -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M30,105 A18,18 0 1,1 66,105 L30,105" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M130,105 A18,18 0 1,1 166,105 L130,105" />
+</vector>

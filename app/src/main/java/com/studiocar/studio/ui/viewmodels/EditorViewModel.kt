@@ -91,12 +91,20 @@ class EditorViewModel : ViewModel() {
     private val _scannedVin = MutableStateFlow<String?>(null)
     val scannedVin = _scannedVin.asStateFlow()
 
+    private val _dealershipName = MutableStateFlow("")
+    val dealershipName = _dealershipName.asStateFlow()
+
+    private val _vendorName = MutableStateFlow("")
+    val vendorName = _vendorName.asStateFlow()
+
     // --- CAMERA STABILIZATION & VEHICLE DETECTION ---
     private val _detectedVehicleType = MutableStateFlow<VehicleType?>(null)
     val detectedVehicleType = _detectedVehicleType.asStateFlow()
 
-    private val _isCameraStable = MutableStateFlow(false)
-    val isCameraStable = _isCameraStable.asStateFlow()
+    private val _isCameraStable = MutableStateFlow(true)
+    val isCameraStable: StateFlow<Boolean> = _isCameraStable.asStateFlow()
+
+    private var liveAdjustmentJob: kotlinx.coroutines.Job? = null
 
     private var _aiProviderManager: AIProviderManager? = null
     fun getAiProviderManager(context: Context): AIProviderManager {
@@ -124,6 +132,21 @@ class EditorViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 settings.customBackgroundPaths.collect { customBackgrounds.value = it }
+            } catch (e: Exception) { Timber.e(e) }
+        }
+
+        viewModelScope.launch {
+            try {
+                settings.dealershipName.collect { _dealershipName.value = it }
+            } catch (e: Exception) { Timber.e(e) }
+        }
+
+        viewModelScope.launch {
+            try {
+                settings.currentVendorName.collect { 
+                    _vendorName.value = it 
+                    _carMetadata.value = _carMetadata.value.copy(vendorName = it)
+                }
             } catch (e: Exception) { Timber.e(e) }
         }
         
@@ -449,17 +472,26 @@ class EditorViewModel : ViewModel() {
         val currentAdjustments = _adjustments.value
         val currentLight = _lightStyle.value
         
-        viewModelScope.launch {
-            _adjustedBitmap.value = ImageAdjustmentApplier.applyAdjustments(base, currentAdjustments, currentLight)
+        liveAdjustmentJob?.cancel()
+        liveAdjustmentJob = viewModelScope.launch(kotlinx.coroutines.Dispatchers.Default) {
+            val result = ImageAdjustmentApplier.applyAdjustments(base, currentAdjustments, currentLight)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                _adjustedBitmap.value = result
+            }
         }
     }
 
-    fun generateAiCaption() {
+    fun generateAiCaption(context: Context) {
         val result = _resultBitmap.value ?: return
+        val currentService = getService(context)
         viewModelScope.launch {
-             _generatedCaption.value = null
-             // Assume service is already initialized or use a way to get it
-             // Better: pass service result to VM
+            _generatedCaption.value = null
+            try {
+                val caption = currentService.generateCaption(_carMetadata.value, _options.value)
+                _generatedCaption.value = caption
+            } catch (e: Exception) {
+                Timber.e(e, "Error generating AI caption")
+            }
         }
     }
 
@@ -551,7 +583,8 @@ class EditorViewModel : ViewModel() {
                     batchId = batchId,
                     caption = _generatedCaption.value,
                     backgroundName = _options.value.background.description,
-                    floorName = _options.value.floor.description
+                    floorName = _options.value.floor.description,
+                    vendorName = _vendorName.value
                 )
                 AppDatabase.getDatabase(context).carDao().insertCar(car)
             }

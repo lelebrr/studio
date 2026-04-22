@@ -170,14 +170,29 @@ fun SettingsScreen(
                 }
             }
 
-            // --- SEÇÃO: CÂMERA ---
-            SettingsSection("CÂMERA") {
+            // --- SEÇÃO: CÂMERA E EXPORT ---
+            SettingsSection("CÂMERA & EXPORTAÇÃO") {
                 SettingsSwitch(
                     title = "ESTABILIZAÇÃO AVANÇADA",
                     subtitle = "Usa OIS e redução de tremores para capturas mais nítidas",
                     checked = advancedStabilization,
                     onCheckedChange = { scope.launch { settingsManager.setAdvancedStabilization(it) } }
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("QUALIDADE DE EXPORTAÇÃO PADRÃO", color = Color.Gray, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ExportSize.entries.forEach { size ->
+                        ExportChip(
+                            label = size.label,
+                            selected = exportSize == size,
+                            onClick = { scope.launch { settingsManager.setDefaultExportSize(size.name) } }
+                        )
+                    }
+                }
             }
 
             // --- SEÇÃO: SISTEMA ---

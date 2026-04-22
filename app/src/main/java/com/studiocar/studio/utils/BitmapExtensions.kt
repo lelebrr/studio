@@ -14,10 +14,27 @@ object BitmapExtensions {
      * Converte Bitmap para String Base64 formatada para APIs (data:image/jpeg;base64,...).
      */
     fun Bitmap.toBase64(quality: Int = 80): String {
-        val outputStream = ByteArrayOutputStream()
-        this.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
-        val byteArray = outputStream.toByteArray()
-        return "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
+        return try {
+            val outputStream = ByteArrayOutputStream()
+            this.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+            val byteArray = outputStream.toByteArray()
+            "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    /**
+     * Converte String Base64 de volta para Bitmap.
+     */
+    fun fromBase64(base64: String): Bitmap? {
+        return try {
+            val cleanBase64 = if (base64.contains(",")) base64.split(",")[1] else base64
+            val decodedString = Base64.decode(cleanBase64, Base64.DEFAULT)
+            android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /**
@@ -80,5 +97,34 @@ object BitmapExtensions {
             totalBrightness += (r + g + b) / 3
         }
         return totalBrightness.toFloat() / (width * height)
+    }
+
+    /**
+     * Converte Bitmap para MultipartBody.Part para upload em APIs.
+     */
+    fun Bitmap.toMultipartBody(name: String, filename: String = "image.png"): okhttp3.MultipartBody.Part {
+        val outputStream = ByteArrayOutputStream()
+        this.compress(Bitmap.Config.ARGB_8888.let { if (android.os.Build.VERSION.SDK_INT >= 30) Bitmap.CompressFormat.WEBP_LOSSLESS else Bitmap.CompressFormat.PNG }, 100, outputStream)
+        val requestBody = okhttp3.RequestBody.create(
+            "image/png".getMediaTypeOrNull(),
+            outputStream.toByteArray()
+        )
+        return okhttp3.MultipartBody.Part.createFormData(name, filename, requestBody)
+    }
+
+    /**
+     * Carrega um Bitmap a partir de uma URL.
+     */
+    suspend fun fromUrl(url: String): Bitmap? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+            connection.doInput = true
+            connection.connect()
+            val input = connection.inputStream
+            android.graphics.BitmapFactory.decodeStream(input)
+        } catch (e: Exception) {
+            timber.log.Timber.e(e, "Erro ao baixar imagem da URL: $url")
+            null
+        }
     }
 }

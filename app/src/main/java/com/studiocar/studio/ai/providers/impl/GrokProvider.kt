@@ -4,6 +4,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import com.studiocar.studio.ai.providers.ImageAIProvider
 import com.studiocar.studio.data.models.EditOptions
+import com.studiocar.studio.network.*
+import com.studiocar.studio.utils.BitmapExtensions
+import com.studiocar.studio.utils.BitmapExtensions.toBase64
 import com.studiocar.studio.utils.SecurityUtils
 import timber.log.Timber
 
@@ -12,18 +15,73 @@ class GrokProvider(
 ) : ImageAIProvider {
 
     override val id: String = "grok"
-    override val name: String = "Grok Image API"
-    override val description: String = "IA da xAI com capacidades de visão de nova geração."
+    override val name: String = "xAI Grok"
+    override val description: String = "Visão computacional de ponta com o motor xAI."
     override val isAvailable: Boolean
         get() = !securityUtils.getApiKey(id).isNullOrEmpty()
 
-    override suspend fun editCarImage(bitmap: Bitmap, mask: Bitmap?, prompt: String, options: EditOptions): Bitmap? {
-        securityUtils.getApiKey(id) ?: return null
-        Timber.i("Grok Image API: Processando...")
-        return bitmap
+    override suspend fun editCarImage(
+        bitmap: Bitmap,
+        mask: Bitmap?,
+        prompt: String,
+        options: EditOptions
+    ): Bitmap? {
+        val apiKey = securityUtils.getApiKey(id) ?: return null
+        
+        val content = mutableListOf<ContentItem>()
+        content.add(ContentItem(type = "text", text = prompt))
+        content.add(ContentItem(type = "image_url", imageUrl = ImageUrlItem(url = bitmap.toBase64(80))))
+        
+        val request = ChatRequest(
+            model = options.aiModelId ?: "grok-vision-beta",
+            messages = listOf(Message(role = "user", content = content))
+        )
+
+        return try {
+            val response = NetworkModule.grokApi.getChatCompletion("Bearer $apiKey", request = request)
+            val responseText = response.choices.firstOrNull()?.message?.content ?: return null
+            
+            if (responseText.startsWith("data:image") || responseText.length > 1000) {
+                BitmapExtensions.fromBase64(responseText)
+            } else {
+                Timber.w("Grok retornou texto em vez de imagem: $responseText")
+                null
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Grok Error")
+            null
+        }
     }
 
-    override suspend fun generateCaption(prompt: String): String = "Grok Vision Insight"
+    override suspend fun generateCaption(prompt: String): String {
+        val apiKey = securityUtils.getApiKey(id) ?: return "Erro"
+        return try {
+            val response = NetworkModule.grokApi.getChatCompletion(
+                auth = "Bearer $apiKey",
+                request = ChatRequest(
+                    model = "grok-beta",
+                    messages = listOf(Message(role = "user", content = listOf(ContentItem(type = "text", text = prompt))))
+                )
+            )
+            response.choices.firstOrNull()?.message?.content ?: "Sem resposta"
+        } catch (e: Exception) {
+            "Falha: ${e.message}"
+        }
+    }
 
-    override suspend fun testConnection(apiKey: String): Boolean = apiKey.isNotEmpty()
+    override suspend fun testConnection(apiKey: String): Boolean {
+        if (apiKey.isEmpty()) return false
+        return try {
+            val response = NetworkModule.grokApi.getChatCompletion(
+                auth = "Bearer $apiKey",
+                request = ChatRequest(
+                    model = "grok-beta",
+                    messages = listOf(Message(role = "user", content = listOf(ContentItem(type = "text", text = "Ping"))))
+                )
+            )
+            response.choices.isNotEmpty()
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

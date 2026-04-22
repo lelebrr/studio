@@ -149,9 +149,11 @@ fun EditorScreen(
 
                 AdvancedAdjustmentsPanel(
                     adjustments = adjustments,
+                    currentLight = viewModel.lightStyle.collectAsState().value,
                     isExpanded = showAdjustments,
                     onToggle = { showAdjustments = !showAdjustments },
                     onUpdateAdjustments = { viewModel.updateAdjustments(it) },
+                    onLightStyleChanged = { viewModel.setLightStyle(it) },
                     onAutoEnhance = { viewModel.autoEnhance() },
                     onReset = { viewModel.resetAdjustments() }
                 )
@@ -318,6 +320,11 @@ fun FeaturesPanel(options: com.studiocar.studio.data.models.EditOptions, onOptio
             FeatureChip("REFRAÇÃO+", options.advancedGlassRefraction, { onOptionToggle(options.copy(advancedGlassRefraction = it)) })
             FeatureChip("SOMBRAS", options.autoShadows, { onOptionToggle(options.copy(autoShadows = it)) })
             FeatureChip("LIMPEZA", options.removeUnwantedObjects, { onOptionToggle(options.copy(removeUnwantedObjects = it)) })
+            FeatureChip("MODO NOITE", options.nightMode, { onOptionToggle(options.copy(nightMode = it)) })
+            FeatureChip("FOTOGRÁFICO", options.isPhotographic, { onOptionToggle(options.copy(isPhotographic = it)) })
+            FeatureChip("REFLEXOS", options.removeReflections, { onOptionToggle(options.copy(removeReflections = it)) })
+            FeatureChip("NITIDEZ+", options.extremeSharpening, { onOptionToggle(options.copy(extremeSharpening = it)) })
+            FeatureChip("ACESSÓRIOS", options.highlightAccessories, { onOptionToggle(options.copy(highlightAccessories = it)) })
         }
     }
 }
@@ -475,12 +482,22 @@ fun StudioSceneCard(scene: com.studiocar.studio.data.models.StudioScene, isSelec
 }
 
 @Composable
-fun AdvancedAdjustmentsPanel(adjustments: ImageAdjustments, isExpanded: Boolean, onToggle: () -> Unit, onUpdateAdjustments: (ImageAdjustments) -> Unit, onAutoEnhance: () -> Unit, onReset: () -> Unit) {
+fun AdvancedAdjustmentsPanel(
+    adjustments: ImageAdjustments,
+    currentLight: DirectionalLightStyle?,
+    isExpanded: Boolean,
+    onToggle: () -> Unit,
+    onUpdateAdjustments: (ImageAdjustments) -> Unit,
+    onLightStyleChanged: (DirectionalLightStyle?) -> Unit,
+    onAutoEnhance: () -> Unit,
+    onReset: () -> Unit
+) {
     Column(modifier = Modifier.padding(16.dp)) {
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle), verticalAlignment = Alignment.CenterVertically) {
             Text("AJUSTES DE IMAGEM", color = Color.Gray, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
             Icon(if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, tint = Color.Gray)
         }
+
         AnimatedVisibility(visible = isExpanded) {
             Column(modifier = Modifier.padding(top = 16.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -491,10 +508,40 @@ fun AdvancedAdjustmentsPanel(adjustments: ImageAdjustments, isExpanded: Boolean,
                         Text("RESET", color = Color.White)
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("COR & EXPOSIÇÃO", color = StudioCyan, fontSize = 10.sp, fontWeight = FontWeight.Black)
                 AdjustmentSlider("Brilho", adjustments.brightness, -50f, 50f) { onUpdateAdjustments(adjustments.copy(brightness = it)) }
                 AdjustmentSlider("Contraste", adjustments.contrast, 0.5f, 1.5f) { onUpdateAdjustments(adjustments.copy(contrast = it)) }
                 AdjustmentSlider("Saturação", adjustments.saturation, 0f, 2f) { onUpdateAdjustments(adjustments.copy(saturation = it)) }
+                AdjustmentSlider("Exposição", adjustments.exposure, -2f, 2f) { onUpdateAdjustments(adjustments.copy(exposure = it)) }
+                AdjustmentSlider("Temperatura", adjustments.temperature, -100f, 100f) { onUpdateAdjustments(adjustments.copy(temperature = it)) }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("DETALHES & LUZ", color = StudioCyan, fontSize = 10.sp, fontWeight = FontWeight.Black)
+                AdjustmentSlider("Sombras", adjustments.shadows, -100f, 100f) { onUpdateAdjustments(adjustments.copy(shadows = it)) }
+                AdjustmentSlider("Destaques", adjustments.highlights, -100f, 100f) { onUpdateAdjustments(adjustments.copy(highlights = it)) }
+                AdjustmentSlider("Nitidez", adjustments.sharpen, 0f, 100f) { onUpdateAdjustments(adjustments.copy(sharpen = it)) }
+                AdjustmentSlider("Clareza", adjustments.clarity, 0f, 100f) { onUpdateAdjustments(adjustments.copy(clarity = it)) }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("ILUMINAÇÃO DE ESTÚDIO", color = StudioCyan, fontSize = 10.sp, fontWeight = FontWeight.Black)
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    com.studiocar.studio.data.models.DirectionalLightStyle.entries.forEach { style ->
+                        FilterChip(
+                            selected = currentLight == style,
+                            onClick = { onLightStyleChanged(if(currentLight == style) null else style) },
+                            label = { Text(style.label, fontSize = 10.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = StudioCyan,
+                                selectedLabelColor = StudioBlack,
+                                containerColor = StudioSurfaceVariant,
+                                labelColor = Color.White
+                            )
+                        )
+                    }
+                }
             }
         }
     }
