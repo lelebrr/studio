@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Large models
+app/src/main/assets/models/sam2_hiera_tiny_encoder.onnx

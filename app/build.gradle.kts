@@ -2,8 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
-
+// A chave OPENROUTER_API_KEY deve ser configurada via secrets.properties (não comite arquivos com a chave)
+val openRouterKey = providers.gradleProperty("OPENROUTER_API_KEY").getOrElse("")
 
 android {
     namespace = "com.studiocar.studio"
@@ -19,15 +21,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        // A chave OPENROUTER_API_KEY deve ser configurada via secrets.properties (não comite arquivos com a chave)
-        val openRouterKey = project.findProperty("OPENROUTER_API_KEY") ?: ""
         buildConfigField("String", "OPENROUTER_API_KEY", "\"$openRouterKey\"")
         
         // Configuração para o MediaPipe
         ndk {
-            // Mantém apenas ABIs usadas em dispositivos Android reais para evitar
-            // empacotar libs x86/x86_64 com problemas de alinhamento de página (16 KB).
-            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
+            // Inclui x86_64 para suporte a emuladores, mantendo o alinhamento de 16 KB.
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64"))
         }
     }
 
@@ -41,18 +40,20 @@ android {
             )
             
             // Força um único APK independente da arquitetura (Universal)
+            // Força suporte a arquiteturas 64-bit e legado 32-bit (ARM)
             ndk {
-                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
+                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64"))
             }
         }
     }
 
     packaging {
         jniLibs {
-            // Garante que binários nativos x86/x86_64 não sejam empacotados no artefato final.
-            excludes += setOf("**/x86/*.so", "**/x86_64/*.so")
-            // Resolve o erro de alinhamento ELF de 16 KB no Android 15 extraindo as libs
-            useLegacyPackaging = true
+            // Remove apenas x86 (32-bit) que raramente é usado e tem problemas de alinhamento.
+            // excludes += setOf("**/x86/*.so")
+            // Resolve o erro de alinhamento ELF de 16 KB no Android 15 desativando o empacotamento legado
+            useLegacyPackaging = false
+            excludes += listOf("/META-INF/**")
         }
     }
 
@@ -62,14 +63,14 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlin {
-        jvmToolchain(17)
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
     }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 
@@ -84,6 +85,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.google.material)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
@@ -116,7 +118,7 @@ dependencies {
     // Database & Extras
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    annotationProcessor(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.datastore.preferences)

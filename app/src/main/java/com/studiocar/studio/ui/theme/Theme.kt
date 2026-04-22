@@ -38,7 +38,8 @@ fun StudioCarTheme(
     
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
+            val activity = view.context.findActivity()
+            activity?.window?.let { window ->
             @Suppress("DEPRECATION")
             window.statusBarColor = colorScheme.background.toArgb()
             @Suppress("DEPRECATION")
@@ -46,6 +47,7 @@ fun StudioCarTheme(
             val controller = WindowCompat.getInsetsController(window, view)
             controller.isAppearanceLightStatusBars = false
             controller.isAppearanceLightNavigationBars = false
+            }
         }
     }
 
@@ -54,4 +56,13 @@ fun StudioCarTheme(
         typography = Typography,
         content = content
     )
+}
+
+private fun android.content.Context.findActivity(): Activity? {
+    var context = this
+    while (context is android.content.ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
 }

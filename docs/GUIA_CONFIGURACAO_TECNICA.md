@@ -5,7 +5,7 @@ Este documento contém os passos necessários para configurar e manter o sistema
 ## 1. Instalação do Aplicativo
 
 O app é fornecido como um arquivo APK de instalação direta (Enterprise).
-1. Transfira o arquivo `StudioCar-Elite-v2.1.apk` para o celular.
+1. Transfira o arquivo `StudioCar-Elite-v2.1.1.apk` para o celular.
 2. Ative "Instalar aplicativos de fontes desconhecidas" nas configurações do Android.
 3. Execute o APK e siga os passos de instalação.
 

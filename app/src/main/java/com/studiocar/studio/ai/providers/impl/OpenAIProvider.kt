@@ -36,7 +36,7 @@ class OpenAIProvider(
         return "Veículo de alto desempenho (OpenAI Vision)."
     }
 
-    override suspend fun testConnection(): Boolean {
-        return !securityUtils.getApiKey(id).isNullOrEmpty()
+    override suspend fun testConnection(apiKey: String): Boolean {
+        return apiKey.isNotEmpty()
     }
 }

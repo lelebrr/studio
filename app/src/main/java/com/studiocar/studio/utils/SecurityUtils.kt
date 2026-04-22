@@ -15,13 +15,17 @@ class SecurityUtils(context: Context) {
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
 
-    private val sharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        "studiocar_secure_prefs",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private val sharedPreferences = try {
+        EncryptedSharedPreferences.create(
+            context,
+            "studiocar_secure_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        context.getSharedPreferences("studiocar_secure_prefs_fallback", Context.MODE_PRIVATE)
+    }
 
     fun saveApiKey(providerId: String, key: String) {
         sharedPreferences.edit { putString("api_key_$providerId", key) }

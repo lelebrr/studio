@@ -32,7 +32,7 @@ Bem-vindo ao futuro da fotografia automotiva. Este documento contém os passos e
 
 ## 🛠️ Suporte e Manutenção
 
-- **Atualizações**: Visite a Play Store mensalmente para garantir que você está usando os prompts de IA mais recentes (V1.0.0 atual).
+- **Atualizações**: Verifique com sua gerência por novas versões do APK para garantir que você está usando os prompts de IA mais recentes (V2.1.1 atual).
 - **Processamento**: O tempo de edição pode variar (5-15s) dependendo da conexão com a internet, pois utilizamos supercomputadores de IA na nuvem.
 
 ---

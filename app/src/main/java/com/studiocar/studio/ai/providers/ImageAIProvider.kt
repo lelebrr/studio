@@ -33,5 +33,5 @@ interface ImageAIProvider {
     /**
      * Testa a conexão com o provedor (validação de API Key).
      */
-    suspend fun testConnection(): Boolean
+    suspend fun testConnection(apiKey: String): Boolean
 }

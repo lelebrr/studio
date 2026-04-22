@@ -71,8 +71,8 @@ class OpenRouterProvider(
         }
     }
 
-    override suspend fun testConnection(): Boolean {
-        val apiKey = securityUtils.getApiKey(id) ?: return false
+    override suspend fun testConnection(apiKey: String): Boolean {
+        if (apiKey.isEmpty()) return false
         return try {
             // Chamada light para testar a chave
             val response = NetworkModule.openRouterApi.getCompletion(

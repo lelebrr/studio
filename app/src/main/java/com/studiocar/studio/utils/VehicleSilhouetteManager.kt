@@ -69,7 +69,6 @@ object VehicleSilhouetteManager {
      * Estes são placeholders até que os assets reais sejam adicionados ao projeto.
      * TODO: Adicionar os drawables reais na pasta res/drawable/
      */
-    @Suppress("UNUSED_PARAMETER")
     private fun getSilhouetteResource(type: VehicleType, angle: PhotoAngle): Int? {
         // Mapeando PhotoAngle (que tem vários ângulos) para a lógica de "FRENTE, LATERAL, TRASEIRA"
         val isFront = angle == PhotoAngle.FRONT_THREE_QUARTER || angle == PhotoAngle.FRONT || angle == PhotoAngle.ANGLE_45
@@ -79,32 +78,15 @@ object VehicleSilhouetteManager {
         // Se não for um dos principais ângulos externos, não mostramos silhueta
         if (!isFront && !isRear && !isSide) return null
 
-        // Mapeamento provisório usando um drawable genérico para evitar crash
-        // (Será substituído pelos drawables reais: R.drawable.silhueta_sedan_frente, etc)
-        // Por hora, usamos o ícone do app ou um fundo neutro se não existirem
-        return R.drawable.ic_launcher_background
-        
-        /* 
-        // Exemplo da implementação final:
+        // Mapeamento usando o tipo de veículo e ângulo
+        // Nota: Atualmente todos retornam ic_launcher_background como placeholder
+        // até que os assets específicos (ex: silhouette_sedan_front) sejam adicionados.
         return when (type) {
-            VehicleType.HATCH -> {
-                if (isFront) R.drawable.silhouette_hatch_front
-                else if (isRear) R.drawable.silhouette_hatch_rear
-                else R.drawable.silhouette_hatch_side
+            VehicleType.HATCH, VehicleType.SEDAN, VehicleType.SUV, 
+            VehicleType.PICKUP, VehicleType.CROSSOVER, VehicleType.MINIVAN, 
+            VehicleType.STATION_WAGON, VehicleType.COUPE -> {
+                R.drawable.ic_launcher_background
             }
-            VehicleType.SEDAN -> {
-                if (isFront) R.drawable.silhouette_sedan_front
-                else if (isRear) R.drawable.silhouette_sedan_rear
-                else R.drawable.silhouette_sedan_side
-            }
-            VehicleType.SUV -> {
-                if (isFront) R.drawable.silhouette_suv_front
-                else if (isRear) R.drawable.silhouette_suv_rear
-                else R.drawable.silhouette_suv_side
-            }
-            // ... Mapear todos os 8 tipos
-            else -> null
         }
-        */
     }
 }

@@ -22,7 +22,6 @@ import com.studiocar.studio.utils.SettingsManager
  * MainActivity V2.1.1 - StudioCar Elite Professional Suite.
  * Core orchestrator for the B2B professional photography workflow.
  */
-@Suppress("unused")
 class MainActivity : ComponentActivity() {
 
     private val editorViewModel: EditorViewModel by viewModels()
@@ -69,6 +68,7 @@ fun NavGraph(
             MainScreen(
                 viewModel = viewModel,
                 onNavigateToCamera = { navController.navigate("camera") },
+                onNavigateToEditor = { navController.navigate("editor") },
                 onNavigateToSettings = { navController.navigate("settings") },
                 onNavigateToHistory = { navController.navigate("history") }
             )

@@ -31,7 +31,7 @@ class MediaPipeSegmenter(private val context: Context) {
 
     companion object {
         private const val TAG = "MediaPipeSegmenter"
-        private const val SELFIE_SEGMENTER_MODEL = "selfie_multiclass.tflite" // Modelo mais preciso para múltiplos objetos
+        private const val SELFIE_SEGMENTER_MODEL = "models/selfie_multiclass.tflite" // Modelo mais preciso para múltiplos objetos
         private const val MAX_IMAGE_SIZE = 3072
     }
 

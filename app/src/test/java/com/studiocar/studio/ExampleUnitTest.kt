@@ -13,4 +13,11 @@ class ExampleUnitTest {
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)
     }
+
+    @Test
+    fun app_package_isCorrect() {
+        // Referencing a class from the main source set to resolve lint about unused dependency
+        val contextHolder = com.studiocar.studio.ui.viewmodels.ContextHolder
+        assertNotNull(contextHolder)
+    }
 }

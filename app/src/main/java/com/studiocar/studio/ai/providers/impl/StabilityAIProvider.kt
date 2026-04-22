@@ -38,7 +38,7 @@ class StabilityAIProvider(
         return "Foto profissional editada via Stability AI."
     }
 
-    override suspend fun testConnection(): Boolean {
-        return !securityUtils.getApiKey(id).isNullOrEmpty()
+    override suspend fun testConnection(apiKey: String): Boolean {
+        return apiKey.isNotEmpty()
     }
 }

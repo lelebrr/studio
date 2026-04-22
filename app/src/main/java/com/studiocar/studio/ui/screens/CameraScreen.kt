@@ -1,11 +1,13 @@
-@file:OptIn(ExperimentalCamera2Interop::class, ExperimentalGetImage::class)
-
 package com.studiocar.studio.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.annotation.SuppressLint
 import android.util.Size
 import androidx.camera.core.*
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -39,14 +41,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.camera.camera2.interop.Camera2Interop
-import androidx.camera.camera2.interop.CaptureRequestOptions
 import android.hardware.camera2.CaptureRequest
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.PickVisualMediaRequest
@@ -56,7 +55,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
-import com.studiocar.studio.data.models.PhotoAngle
 import com.studiocar.studio.ui.components.*
 import com.studiocar.studio.data.models.*
 import com.studiocar.studio.ui.viewmodels.EditorViewModel
@@ -70,7 +68,6 @@ import com.studiocar.studio.ui.components.LightbulbButton
 import com.studiocar.studio.ui.components.CarTipsPanel
 import com.studiocar.studio.ui.components.ProCameraSettingsPanel
 import android.content.Context
-import android.graphics.Color as AndroidColor
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory
 import androidx.compose.ui.draw.blur
@@ -88,12 +85,10 @@ import com.studiocar.studio.ai.VehicleTypeDetector
 import com.studiocar.studio.utils.VehicleSilhouetteManager
 import kotlin.math.abs
 import kotlin.math.roundToInt
-import androidx.camera.camera2.interop.ExperimentalCamera2Interop
-import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.ui.unit.IntOffset
 
-@SuppressLint("UnsafeOptInUsageError")
 @OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnsafeOptInUsageError")
 @Composable
 fun CameraScreen(
     viewModel: EditorViewModel = viewModel(),
@@ -105,6 +100,28 @@ fun CameraScreen(
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val haptic = LocalHapticFeedback.current
     
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            hasCameraPermission = isGranted
+        }
+    )
+
+    LaunchedEffect(Unit) {
+        if (!hasCameraPermission) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     val options by viewModel.options.collectAsState()
     val isScanningVin by viewModel.isScanningVin.collectAsState()
     val scannedVin by viewModel.scannedVin.collectAsState()
@@ -117,6 +134,7 @@ fun CameraScreen(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
             if (uri != null) {
+                Timber.d("Gallery image selected: $uri")
                 viewModel.pickImageFromGallery(
                     context = context, 
                     uri = uri,
@@ -124,9 +142,16 @@ fun CameraScreen(
                         pendingGalleryProceed = proceed
                     },
                     onSuccess = {
-                        onNavigateToEditor()
+                        Timber.d("Gallery processing success. Navigating to editor.")
+                        if (options.batchMode) {
+                            android.widget.Toast.makeText(context, "Imagem adicionada ao lote", android.widget.Toast.LENGTH_SHORT).show()
+                        } else {
+                            onNavigateToEditor()
+                        }
                     }
                 )
+            } else {
+                Timber.d("Gallery picker cancelled")
             }
         }
     )
@@ -224,36 +249,49 @@ fun CameraScreen(
     fun Float.toComposeDp() = with(density) { this@toComposeDp.toDp() }
 
     // CameraX Initialization
-    @Suppress("DEPRECATION")
     val imageCapture = remember<ImageCapture>(proSettings.resolution, proSettings.quality) {
-        val builder = ImageCapture.Builder()
-            .setCaptureMode(if(proSettings.quality == CameraQuality.MAXIMUM) ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY else ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            .setFlashMode(flashMode)
-            .setTargetResolution(Size(proSettings.resolution.width, proSettings.resolution.height))
-        
-        // Aplicar Configurações Pro via Camera2Interop
-        val extender = Camera2Interop.Extender(builder)
-        if (proSettings.iso != 100 || proSettings.shutterSpeedNanos != 16_666_666L) {
-            extender.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
-            extender.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, proSettings.iso)
-            extender.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, proSettings.shutterSpeedNanos)
-        }
-        
-        // White Balance (#PRO)
-        if (proSettings.whiteBalanceTemp != 5500) {
-            extender.setCaptureRequestOption(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF)
-            extender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX)
-            val gains = calculateWbGains(proSettings.whiteBalanceTemp)
-            extender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_GAINS, android.hardware.camera2.params.RggbChannelVector(gains.first, 1.0f, 1.0f, gains.second))
-        }
+        try {
+            val resolutionSelector = ResolutionSelector.Builder()
+                .setResolutionStrategy(
+                    ResolutionStrategy(
+                        Size(proSettings.resolution.width, proSettings.resolution.height),
+                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                    )
+                )
+                .build()
 
-        // Estabilização Avançada
-        if (advancedStabilization) {
-            extender.setCaptureRequestOption(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON)
-            extender.setCaptureRequestOption(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON)
-        }
+            val builder = ImageCapture.Builder()
+                .setCaptureMode(if(proSettings.quality == CameraQuality.MAXIMUM) ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY else ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .setFlashMode(flashMode)
+                .setResolutionSelector(resolutionSelector)
+            
+            // Aplicar Configurações Pro via Camera2Interop
+            val extender = Camera2Interop.Extender(builder)
+            if (proSettings.iso != 100 || proSettings.shutterSpeedNanos != 16_666_666L) {
+                extender.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
+                extender.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, proSettings.iso)
+                extender.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, proSettings.shutterSpeedNanos)
+            }
+            
+            // White Balance (#PRO)
+            if (proSettings.whiteBalanceTemp != 5500) {
+                extender.setCaptureRequestOption(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF)
+                extender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX)
+                val gains = calculateWbGains(proSettings.whiteBalanceTemp)
+                extender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_GAINS, android.hardware.camera2.params.RggbChannelVector(gains.first, 1.0f, 1.0f, gains.second))
+            }
 
-        builder.build()
+            // Estabilização Avançada
+            if (advancedStabilization) {
+                extender.setCaptureRequestOption(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON)
+                extender.setCaptureRequestOption(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON)
+            }
+
+            builder.build()
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao construir ImageCapture")
+            ImageCapture.Builder().build() // Fallback básico
+        }
     }
 
     val barcodeScanner = remember { BarcodeScanning.getClient() }
@@ -330,88 +368,135 @@ fun CameraScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        AndroidView(
-            factory = { ctx ->
-                PreviewView(ctx).apply {
-                    implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-                }
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures { offset ->
-                        focusPoint = offset
-                        focusVisibility = true
-                        val factory = SurfaceOrientedMeteringPointFactory(size.width.toFloat(), size.height.toFloat())
-                        val point = factory.createPoint(offset.x, offset.y)
-                        val action = FocusMeteringAction.Builder(point).build()
-                        camera?.cameraControl?.startFocusAndMetering(action)
-                        
-                        // Esconder indicador de foco após 2s
-                        scope.launch {
-                            delay(2000)
-                            focusVisibility = false
-                        }
+        if (hasCameraPermission) {
+            AndroidView(
+                factory = { ctx ->
+                    PreviewView(ctx).apply {
+                        implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                     }
                 },
-            update = { previewView ->
-                val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-                cameraProviderFuture.addListener({
-                    val cameraProvider = cameraProviderFuture.get()
-                    val extensionsManagerFuture = ExtensionsManager.getInstanceAsync(context, cameraProvider)
-                    
-                    extensionsManagerFuture.addListener({
-                        val extensionsManager = extensionsManagerFuture.get()
-                        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-                        
-                        // HDR Auto-Selection (#22)
-                        val finalSelector = if (extensionsManager.isExtensionAvailable(cameraSelector, ExtensionMode.HDR)) {
-                            extensionsManager.getExtensionEnabledCameraSelector(cameraSelector, ExtensionMode.HDR)
-                        } else cameraSelector
-
-                        val previewBuilder = Preview.Builder()
-                        
-                        // Aplicar Configurações Pro ao Preview também (#PRO)
-                        val previewExtender = Camera2Interop.Extender(previewBuilder)
-                        if (proSettings.iso != 100 || proSettings.shutterSpeedNanos != 16_666_666L) {
-                            previewExtender.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
-                            previewExtender.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, proSettings.iso)
-                            previewExtender.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, proSettings.shutterSpeedNanos)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures { offset ->
+                            focusPoint = offset
+                            focusVisibility = true
+                            val factory = SurfaceOrientedMeteringPointFactory(size.width.toFloat(), size.height.toFloat())
+                            val point = factory.createPoint(offset.x, offset.y)
+                            val action = FocusMeteringAction.Builder(point).build()
+                            camera?.cameraControl?.startFocusAndMetering(action)
+                            
+                            // Esconder indicador de foco após 2s
+                            scope.launch {
+                                delay(2000)
+                                focusVisibility = false
+                            }
                         }
+                    },
+                update = { previewView ->
+                    val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+                    cameraProviderFuture.addListener({
+                        val cameraProvider = cameraProviderFuture.get()
+                        val extensionsManagerFuture = ExtensionsManager.getInstanceAsync(context, cameraProvider)
                         
-                        if (proSettings.whiteBalanceTemp != 5500) {
-                            previewExtender.setCaptureRequestOption(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
-                            previewExtender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX)
-                            val gains = calculateWbGains(proSettings.whiteBalanceTemp)
-                            previewExtender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_GAINS, android.hardware.camera2.params.RggbChannelVector(gains.first, 1.0f, 1.0f, gains.second))
-                        }
+                        extensionsManagerFuture.addListener({
+                            val extensionsManager = extensionsManagerFuture.get()
+                            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                            
+                            // HDR Auto-Selection (#22)
+                            val finalSelector = if (extensionsManager.isExtensionAvailable(cameraSelector, ExtensionMode.HDR)) {
+                                extensionsManager.getExtensionEnabledCameraSelector(cameraSelector, ExtensionMode.HDR)
+                            } else cameraSelector
 
-                        // Estabilização Avançada no Preview
-                        if (advancedStabilization) {
-                            previewExtender.setCaptureRequestOption(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON)
-                            previewExtender.setCaptureRequestOption(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON)
-                        }
+                            val resolutionSelector = ResolutionSelector.Builder()
+                                .setResolutionStrategy(
+                                    ResolutionStrategy(
+                                        Size(proSettings.resolution.width, proSettings.resolution.height),
+                                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                                    )
+                                )
+                                .build()
 
-                        // Aplicar EV via CameraControl
-                        camera?.cameraControl?.setExposureCompensationIndex(
-                            (proSettings.exposureCompensation * (camera?.cameraInfo?.exposureState?.exposureCompensationRange?.upper ?: 12)).toInt()
-                        )
+                            val previewBuilder = Preview.Builder()
+                                .setResolutionSelector(resolutionSelector)
+                            
+                            // Aplicar Configurações Pro ao Preview também (#PRO)
+                            val previewExtender = Camera2Interop.Extender(previewBuilder)
+                            if (proSettings.iso != 100 || proSettings.shutterSpeedNanos != 16_666_666L) {
+                                previewExtender.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
+                                previewExtender.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, proSettings.iso)
+                                previewExtender.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, proSettings.shutterSpeedNanos)
+                            }
+                            
+                            if (proSettings.whiteBalanceTemp != 5500) {
+                                previewExtender.setCaptureRequestOption(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
+                                previewExtender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX)
+                                val gains = calculateWbGains(proSettings.whiteBalanceTemp)
+                                previewExtender.setCaptureRequestOption(CaptureRequest.COLOR_CORRECTION_GAINS, android.hardware.camera2.params.RggbChannelVector(gains.first, 1.0f, 1.0f, gains.second))
+                            }
 
-                        val preview = previewBuilder.build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
-                        try {
-                            cameraProvider.unbindAll()
-                            camera = cameraProvider.bindToLifecycle(
-                                lifecycleOwner, 
-                                finalSelector, 
-                                preview, 
-                                imageCapture, 
-                                imageAnalysis
+                            // Estabilização Avançada no Preview
+                            if (advancedStabilization) {
+                                previewExtender.setCaptureRequestOption(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON)
+                                previewExtender.setCaptureRequestOption(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON)
+                            }
+
+                            // Aplicar EV via CameraControl
+                            camera?.cameraControl?.setExposureCompensationIndex(
+                                (proSettings.exposureCompensation * (camera?.cameraInfo?.exposureState?.exposureCompensationRange?.upper ?: 12)).toInt()
                             )
-                        } catch (e: Exception) { Timber.e(e, "Erro na câmera") }
+
+                            val preview = previewBuilder.build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
+                            try {
+                                cameraProvider.unbindAll()
+                                camera = cameraProvider.bindToLifecycle(
+                                    lifecycleOwner, 
+                                    finalSelector, 
+                                    preview, 
+                                    imageCapture, 
+                                    imageAnalysis
+                                )
+                            } catch (e: Exception) { Timber.e(e, "Erro na câmera") }
+                        }, ContextCompat.getMainExecutor(context))
                     }, ContextCompat.getMainExecutor(context))
-                }, ContextCompat.getMainExecutor(context))
+                }
+            )
+        } else {
+            // Fallback UI when permission is missing
+            Column(
+                modifier = Modifier.fillMaxSize().padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    Icons.Default.CameraAlt,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.3f),
+                    modifier = Modifier.size(64.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Acesso à Câmera Necessário",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Para capturar fotos profissionais do seu veículo, precisamos de permissão para acessar a câmera.",
+                    color = Color.White.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                    colors = ButtonDefaults.buttonColors(containerColor = StudioCyan)
+                ) {
+                    Text("Conceder Permissão", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
             }
-        )
+        }
 
         // Grade de Enquadramento (#PRO)
         if (proSettings.gridType != GridType.NONE) {
@@ -600,6 +685,7 @@ fun CameraScreen(
                                 val bitmap = image.toBitmap()
                                 if (options.batchMode) {
                                     viewModel.addToBatch(bitmap)
+                                    android.widget.Toast.makeText(context, "Foto capturada e adicionada ao lote", android.widget.Toast.LENGTH_SHORT).show()
                                 } else {
                                     viewModel.setOriginalImage(bitmap)
                                     onNavigateToEditor()

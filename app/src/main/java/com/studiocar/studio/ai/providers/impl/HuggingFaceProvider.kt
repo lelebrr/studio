@@ -25,5 +25,5 @@ class HuggingFaceProvider(
 
     override suspend fun generateCaption(prompt: String): String = "Hugging Face Vision Model"
 
-    override suspend fun testConnection(): Boolean = !securityUtils.getApiKey(id).isNullOrEmpty()
+    override suspend fun testConnection(apiKey: String): Boolean = apiKey.isNotEmpty()
 }

@@ -27,6 +27,7 @@ fun NavGraph(
             MainScreen(
                 viewModel = viewModel,
                 onNavigateToCamera = { navController.navigate("camera") },
+                onNavigateToEditor = { navController.navigate("editor") },
                 onNavigateToSettings = { navController.navigate("settings") },
                 onNavigateToHistory = { navController.navigate("history") }
             )

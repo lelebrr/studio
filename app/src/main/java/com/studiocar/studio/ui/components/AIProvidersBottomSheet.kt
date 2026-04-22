@@ -272,7 +272,7 @@ fun ApiKeyConfigDialog(
                         testResult = null
                         scope.launch {
                             // Real provider connection test
-                            testResult = provider.testConnection()
+                            testResult = provider.testConnection(key)
                             isTesting = false
                         }
                     },

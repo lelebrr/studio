@@ -25,8 +25,8 @@ class AdvancedCarSegmenter(private val context: Context) {
     private var isInitialized = false
 
     // Nomes de modelos sugeridos para StudioCar 2026
-    private val premiumModel = "car_segmenter_v2_2026.tflite" 
-    private val fallbackModel = "selfie_multiclass.tflite"
+    private val premiumModel = "models/car_segmenter_v2_2026.tflite" 
+    private val fallbackModel = "models/selfie_multiclass.tflite"
 
     suspend fun initialize(): Boolean = withContext(Dispatchers.IO) {
         if (isInitialized) return@withContext true

@@ -31,16 +31,24 @@ import com.studiocar.studio.ui.components.StudioAppBar
 import com.studiocar.studio.ui.theme.*
 import com.studiocar.studio.ui.viewmodels.EditorViewModel
 import com.studiocar.studio.data.models.EditedCar
+import timber.log.Timber
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import android.graphics.BitmapFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     viewModel: EditorViewModel = viewModel(),
     onNavigateToCamera: () -> Unit,
+    onNavigateToEditor: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToHistory: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val recentCaptures by viewModel.historyList(context).collectAsState(initial = emptyList())
 
     Scaffold(
@@ -171,7 +179,20 @@ fun MainScreen(
                     ) {
                         items(recentCaptures.take(5)) { car ->
                             RecentCaptureCard(car = car) {
-                                // Navigate to Editor with this car
+                                scope.launch(Dispatchers.IO) {
+                                    try {
+                                        val file = File(car.resultPhotoPath)
+                                        if (file.exists()) {
+                                            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                                            withContext(Dispatchers.Main) {
+                                                viewModel.setOriginalImage(bitmap)
+                                                onNavigateToEditor()
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        Timber.e(e, "Erro ao carregar captura recente")
+                                    }
+                                }
                             }
                         }
                     }

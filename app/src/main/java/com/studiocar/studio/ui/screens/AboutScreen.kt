@@ -51,7 +51,7 @@ fun AboutScreen(onBack: () -> Unit) {
                 color = Color.White
             )
             Text("Professional Studio AI Suite", color = StudioCyan, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Text("v2.1.0 — Gold Master Elite", color = Color.Gray, fontSize = 12.sp)
+            Text("v2.1.1 — Gold Master Elite", color = Color.Gray, fontSize = 12.sp)
             
             Spacer(modifier = Modifier.height(32.dp))
             

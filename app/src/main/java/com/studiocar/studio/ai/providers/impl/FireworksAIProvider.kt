@@ -25,5 +25,5 @@ class FireworksAIProvider(
 
     override suspend fun generateCaption(prompt: String): String = "Fireworks AI Vision"
 
-    override suspend fun testConnection(): Boolean = !securityUtils.getApiKey(id).isNullOrEmpty()
+    override suspend fun testConnection(apiKey: String): Boolean = apiKey.isNotEmpty()
 }

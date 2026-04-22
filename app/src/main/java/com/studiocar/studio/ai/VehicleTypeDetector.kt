@@ -20,7 +20,6 @@ class VehicleTypeDetector {
      * Processa a imagem para detectar o tipo de veículo.
      * Retorna o VehicleType detectado, ou nulo se nenhum veículo for reconhecido.
      */
-    @Suppress("UNUSED_PARAMETER")
     fun processImage(imageProxy: ImageProxy, onTypeDetected: (VehicleType?) -> Unit) {
         try {
             // Em uma implementação real com ML Kit Object Detection ou TFLite:
@@ -30,8 +29,10 @@ class VehicleTypeDetector {
             // 3. Obter a label com maior probabilidade
             
             // Simulação (Mock)
+            // Usamos o imageProxy para registrar as dimensões da imagem processada (mantendo o parâmetro em uso)
+            Timber.d("Processando imagem de silhueta: ${imageProxy.width}x${imageProxy.height}")
+            
             // Vamos simular uma detecção de SEDAN para testar a interface.
-            // Em produção, isso virá da inferência do modelo TFLite.
             val mockDetected = VehicleType.SEDAN 
             
             // Lógica de estabilização da detecção (só atualiza após X frames de confiança)

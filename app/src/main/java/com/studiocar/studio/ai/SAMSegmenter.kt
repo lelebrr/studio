@@ -14,7 +14,8 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
-import java.util.Collections
+import java.io.File
+import java.io.FileOutputStream
 
 /**
  * SAMSegmenter.kt - Motor de Segmentação SAM 2 (Segment Anything Model 2).
@@ -29,8 +30,8 @@ class SAMSegmenter(private val context: Context) {
     private var isInitialized = false
 
     companion object {
-        private const val ENCODER_MODEL = "sam2_hiera_tiny_encoder.onnx"
-        private const val DECODER_MODEL = "sam2_hiera_tiny_decoder.onnx"
+        private const val ENCODER_MODEL = "models/sam2_hiera_tiny_encoder.onnx"
+        private const val DECODER_MODEL = "models/sam2_hiera_tiny_decoder.onnx"
         private const val INPUT_SIZE = 1024 // SAM 2 padrão
     }
 
@@ -47,8 +48,8 @@ class SAMSegmenter(private val context: Context) {
                 // addNnapi() 
             }
 
-            encoderSession = env.createSession(loadModel(ENCODER_MODEL), sessionOptions)
-            decoderSession = env.createSession(loadModel(DECODER_MODEL), sessionOptions)
+            encoderSession = env.createSession(getModelPath(ENCODER_MODEL), sessionOptions)
+            decoderSession = env.createSession(getModelPath(DECODER_MODEL), sessionOptions)
             
             isInitialized = true
             Timber.i("SAM 2 Ultra Engine Inicializado com sucesso.")
@@ -59,8 +60,23 @@ class SAMSegmenter(private val context: Context) {
         }
     }
 
-    private fun loadModel(fileName: String): ByteArray {
-        return context.assets.open(fileName).readBytes()
+    private fun getModelPath(fileName: String): String {
+        val modelFile = File(context.cacheDir, fileName.substringAfterLast("/"))
+        try {
+            if (!modelFile.exists() || modelFile.length() == 0L) {
+                Timber.d("Copiando modelo $fileName para o cache...")
+                context.assets.open(fileName).use { input ->
+                    FileOutputStream(modelFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                Timber.d("Modelo $fileName copiado com sucesso (Tamanho: ${modelFile.length()} bytes)")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao copiar modelo $fileName para o cache")
+            // Se falhar a cópia, tentamos retornar o caminho mesmo assim (provavelmente falhará depois)
+        }
+        return modelFile.absolutePath
     }
 
     /**

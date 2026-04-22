@@ -122,12 +122,15 @@ class EditorViewModel : ViewModel() {
     fun loadSettings(context: Context) {
         val settings = getSettings(context)
         viewModelScope.launch {
-            settings.customBackgroundPaths.collect { customBackgrounds.value = it }
+            try {
+                settings.customBackgroundPaths.collect { customBackgrounds.value = it }
+            } catch (e: Exception) { Timber.e(e) }
         }
         
         // Collect Camera Settings
         viewModelScope.launch {
-            combine<Any, CameraSettings>(
+            try {
+                combine<Any, CameraSettings>(
                 settings.cameraIso, settings.cameraShutter, settings.cameraEv,
                 settings.cameraWb, settings.cameraManualFocus, settings.cameraMetering,
                 settings.cameraRes, settings.cameraQuality, settings.cameraTimer,
@@ -147,6 +150,9 @@ class EditorViewModel : ViewModel() {
                     showHistogram = values[10] as Boolean
                 )
             }.collect { _cameraSettings.value = it }
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading camera settings")
+            }
         }
     }
 
@@ -190,13 +196,14 @@ class EditorViewModel : ViewModel() {
                         }
                         
                         // Execute success logic in Main thread
-                        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                        viewModelScope.launch {
+                            Timber.d("Applying selected image (Batch: ${_options.value.batchMode})")
                             if (_options.value.batchMode) {
                                 addToBatch(finalBitmap)
                             } else {
                                 setOriginalImage(finalBitmap)
-                                onSuccess()
                             }
+                            onSuccess()
                         }
                     }
                     

@@ -36,7 +36,7 @@ class ClaudeProvider(
         return "Legenda refinada por Claude AI."
     }
 
-    override suspend fun testConnection(): Boolean {
-        return !securityUtils.getApiKey(id).isNullOrEmpty()
+    override suspend fun testConnection(apiKey: String): Boolean {
+        return apiKey.isNotEmpty()
     }
 }

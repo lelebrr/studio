@@ -2,18 +2,15 @@
 
 package com.studiocar.studio.ui.screens
 
-import android.content.Intent
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -23,13 +20,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.graphicsLayer
 import com.studiocar.studio.ui.theme.*
 import com.studiocar.studio.ui.components.*
 import com.studiocar.studio.ui.components.AIProvidersBottomSheet
 import com.studiocar.studio.ui.viewmodels.EditorViewModel
 import com.studiocar.studio.utils.*
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,7 +36,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.geometry.Offset
 import com.studiocar.studio.data.models.*
 import com.studiocar.studio.ui.components.CaptionDialog
 import kotlinx.coroutines.launch
@@ -78,7 +72,10 @@ fun EditorScreen(
     val bgLauncher = rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
     ) { uri: android.net.Uri? ->
-        uri?.let { viewModel.addCustomBackground(context, it) }
+        uri?.let { 
+            viewModel.addCustomBackground(context, it)
+            showBgSheet = false 
+        }
     }
 
     Scaffold(
