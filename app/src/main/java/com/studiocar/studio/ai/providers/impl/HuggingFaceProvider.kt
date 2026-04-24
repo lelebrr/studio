@@ -9,7 +9,7 @@ import com.studiocar.studio.network.*
 import com.studiocar.studio.utils.BitmapExtensions.toBase64
 import com.studiocar.studio.utils.SecurityUtils
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 
 class HuggingFaceProvider(
@@ -33,7 +33,7 @@ class HuggingFaceProvider(
         
         return try {
             val json = """{"inputs": "$prompt", "image": "${bitmap.toBase64(80).substringAfter("base64,")}"}"""
-            val body = RequestBody.create("application/json".toMediaType(), json)
+            val body = json.toRequestBody("application/json".toMediaType())
             
             val response = NetworkModule.huggingFaceApi.queryModel("Bearer $apiKey", modelId, body)
             val bytes = response.bytes()

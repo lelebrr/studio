@@ -70,7 +70,7 @@ class ImageEditorService(private val context: Context) {
             
             val (segMask, _) = if (useSam2Ultra) {
                 Timber.i("MODO SAM 2 ULTRA ATIVADO")
-                val initialMask = segmenter.segmentVehicle(input!!)
+                val initialMask = segmenter.segmentVehicle(input)
                 val box = initialMask?.extractBoundingBox()
                 val boxArray = if (box != null) floatArrayOf(box.left, box.top, box.right, box.bottom) else null
                 
@@ -80,21 +80,21 @@ class ImageEditorService(private val context: Context) {
                     floatArrayOf(x, y) to intArrayOf(if (isPositive) 1 else 0)
                 }
 
-                val refinedSamMask = samSegmenter.segment(input!!, points = samPoints, box = boxArray)
+                val refinedSamMask = samSegmenter.segment(input, points = samPoints, box = boxArray)
                 val finalMask = (refinedSamMask ?: initialMask)
                 if (initialMask != finalMask) initialMask?.recycle()
                 finalMask to null
             } else if (options.isUltraQuality) {
-                advancedSegmenter.segmentUltra(input!!)
+                advancedSegmenter.segmentUltra(input)
             } else {
-                (segmenter.segmentVehicle(input!!) to null)
+                (segmenter.segmentVehicle(input) to null)
             }
             mask = segMask
             
             // 2. MODO OFFLINE / DEMO
             if (isOffline || isDemo || !primaryProvider.isAvailable) {
-                return@withContext PostProcessor.refineImage(input!!, options).also {
-                    input?.recycle()
+                return@withContext PostProcessor.refineImage(input, options).also {
+                    input.recycle()
                     mask?.recycle()
                 }
             }
@@ -113,7 +113,7 @@ class ImageEditorService(private val context: Context) {
             }
             
             geminiResult = aiProviderManager.editImageWithFallback(
-                bitmap = input!!,
+                bitmap = input,
                 mask = mask,
                 prompt = promptGemini,
                 options = options.copy(aiModelId = if (usePro) OpenRouterConfig.MODEL_GEMINI_3_PRO else OpenRouterConfig.MODEL_GEMINI_31_FLASH)
@@ -133,7 +133,7 @@ class ImageEditorService(private val context: Context) {
             }
 
             finalResult = aiProviderManager.editImageWithFallback(
-                bitmap = geminiResult ?: input!!,
+                bitmap = geminiResult ?: input,
                 mask = mask,
                 prompt = if (options.removeReflections) "$fluxPrompt Remove all existing distracting reflections." else fluxPrompt,
                 options = options.copy(aiModelId = fluxModel)
@@ -144,12 +144,12 @@ class ImageEditorService(private val context: Context) {
                 isSam2UltraEnabled = useSam2Ultra,
                 isUltraQuality = options.isUltraQuality || useSam2Ultra // Se SAM 2, força Ultra
             )
-            val output = PostProcessor.refineImage(finalResult ?: geminiResult ?: input!!, finalOptions)
+            val output = PostProcessor.refineImage(finalResult ?: geminiResult ?: input, finalOptions)
             
             Timber.i("Pipeline StudioCar Ultra finalizada em ${System.currentTimeMillis() - totalStartTime}ms")
             
             // Cleanup
-            if (input != original) input?.recycle()
+            if (input != original) input.recycle()
             mask?.recycle()
             geminiResult?.recycle()
             finalResult?.recycle()

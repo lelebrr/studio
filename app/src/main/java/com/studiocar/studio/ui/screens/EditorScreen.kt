@@ -101,7 +101,7 @@ fun EditorScreen(
                 onGenerate = { viewModel.processImage(context) },
                 onCaption = { 
                     showCaptionDialog = true
-                    viewModel.generateAiCaption()
+                    viewModel.generateAiCaption(context)
                 },
                 onSave = { 
                     resultBitmap?.let { 

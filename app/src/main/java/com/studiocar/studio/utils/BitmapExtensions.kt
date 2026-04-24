@@ -3,6 +3,8 @@ package com.studiocar.studio.utils
 import android.graphics.Bitmap
 import androidx.core.graphics.scale
 import android.util.Base64
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.ByteArrayOutputStream
 
 /**
@@ -105,9 +107,8 @@ object BitmapExtensions {
     fun Bitmap.toMultipartBody(name: String, filename: String = "image.png"): okhttp3.MultipartBody.Part {
         val outputStream = ByteArrayOutputStream()
         this.compress(Bitmap.Config.ARGB_8888.let { if (android.os.Build.VERSION.SDK_INT >= 30) Bitmap.CompressFormat.WEBP_LOSSLESS else Bitmap.CompressFormat.PNG }, 100, outputStream)
-        val requestBody = okhttp3.RequestBody.create(
-            "image/png".getMediaTypeOrNull(),
-            outputStream.toByteArray()
+        val requestBody = outputStream.toByteArray().toRequestBody(
+            "image/png".toMediaTypeOrNull()
         )
         return okhttp3.MultipartBody.Part.createFormData(name, filename, requestBody)
     }

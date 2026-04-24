@@ -26,7 +26,8 @@ android {
         // Configuração para o MediaPipe
         ndk {
             // Inclui x86_64 para suporte a emuladores, mantendo o alinhamento de 16 KB.
-            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64"))
+            // Removemos armeabi-v7a para garantir compatibilidade total com 16 KB (64-bit apenas).
+            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
         }
     }
 
@@ -42,18 +43,30 @@ android {
             // Força um único APK independente da arquitetura (Universal)
             // Força suporte a arquiteturas 64-bit e legado 32-bit (ARM)
             ndk {
-                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64"))
+                abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
             }
         }
     }
 
     packaging {
         jniLibs {
-            // Remove apenas x86 (32-bit) que raramente é usado e tem problemas de alinhamento.
-            // excludes += setOf("**/x86/*.so")
             // Resolve o erro de alinhamento ELF de 16 KB no Android 15 desativando o empacotamento legado
             useLegacyPackaging = false
             excludes += listOf("/META-INF/**")
+            
+            // Mantém símbolos de debug para bibliotecas que falham no stripping (evita avisos e corrupção)
+            keepDebugSymbols += listOf(
+                "**/libandroidx.graphics.path.so",
+                "**/libbarhopper_v3.so",
+                "**/libdatastore_shared_counter.so",
+                "**/libimage_processing_util_jni.so",
+                "**/libmediapipe_tasks_vision_jni.so",
+                "**/libmediapipe_tasks_jni.so",
+                "**/libmlkit_google_ocr_pipeline.so",
+                "**/libonnxruntime.so",
+                "**/libonnxruntime4j_jni.so",
+                "**/libsurface_util_jni.so"
+            )
         }
     }
 

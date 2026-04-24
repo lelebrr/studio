@@ -7,6 +7,7 @@ import com.studiocar.studio.data.models.EditOptions
 import com.studiocar.studio.utils.SecurityUtils
 import com.studiocar.studio.utils.BitmapExtensions.toMultipartBody
 import com.studiocar.studio.network.NetworkModule
+import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 
 class StabilityAIProvider(
@@ -33,8 +34,8 @@ class StabilityAIProvider(
             
             val imagePart = bitmap.toMultipartBody("image")
             val maskPart = actualMask.toMultipartBody("mask")
-            val promptBody = okhttp3.RequestBody.create(okhttp3.MultipartBody.FORM, prompt)
-            val outputFormat = okhttp3.RequestBody.create(okhttp3.MultipartBody.FORM, "png")
+            val promptBody = prompt.toRequestBody(okhttp3.MultipartBody.FORM)
+            val outputFormat = "png".toRequestBody(okhttp3.MultipartBody.FORM)
 
             val responseBody = NetworkModule.stabilityApi.inpaint(
                 auth = "Bearer $apiKey",
